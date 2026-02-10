@@ -1,0 +1,13 @@
+[project]
+name = "aigon-cli"
+version = "0.21.2"
+description = "Command-line interface for the Aigon AI assistant ecosystem"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+aigon = "aigon_cli.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -25,33 +25,29 @@ uv tool install aigon-viewer
 ## Usage
 
 ```bash
-aigon --help          # Show all commands
-aigon --version       # Show version
-aigon config          # Configure API connection
-aigon notes search    # Search notes
-aigon files ls        # List files
-aigon viewer launch   # Launch markdown viewer (requires aigon-viewer)
+aigon --help            # Show all subcommands
+aigon --version         # Show version
+aigon notetaker help    # Show notetaker subcommands
+aigon llm               # LLM-friendly command reference
 ```
+
+## Subcommands
+
+| Subcommand | Description |
+|---------|-------------|
+| `llm` | LLM-friendly command reference |
+| `viewer` | Launch markdown viewer (requires aigon-viewer) |
+| `notetaker` | Search, read, and manage notes |
+| `event` | Event and participant management |
+| `report` | Generate reports |
+| `filedb` | File management (list, upload, download, sync) |
+| `search` | Global search across all resources |
+| `download` | Download any resource by unique ID |
+| `config` | Manage API configuration |
 
 ## Configuration
 
 Run `aigon config` to set up your API token and URL. Configuration is stored in `~/.aigon`.
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `config` | Manage API configuration |
-| `notes` | Search, read, and manage notes |
-| `files` | File management (list, upload, download) |
-| `download` | Download any resource by unique ID |
-| `viewer` | Launch markdown viewer (requires aigon-viewer) |
-| `report` | Generate reports |
-| `event` | Event and participant management |
-| `crypto` | Encryption/decryption tools |
-| `vtt2md` | Convert VTT transcripts to markdown |
-| `search` | Global search across all resources |
-| `llm` | LLM-related commands |
 
 ## License
 

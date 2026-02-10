@@ -4,5 +4,5 @@
 """
 
 # VERSIONHERE:AIGON_CLI
-__version__ = "0.21.2"
-__date__ = "2026-02-09"
+__version__ = "0.22"
+__date__ = "2026-02-10"

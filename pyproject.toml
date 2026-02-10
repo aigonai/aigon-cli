@@ -1,6 +1,6 @@
 [project]
 name = "aigon-cli"
-version = "0.21.2"
+version = "0.22"
 description = "Command-line interface for the Aigon AI assistant ecosystem"
 requires-python = ">=3.10"
 dependencies = []

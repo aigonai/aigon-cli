@@ -104,7 +104,15 @@ class AigonClient:
                     reverse: bool = False,
                     agent_filter: Optional[str] = None,
                     show_delegated: bool = True,
-                    with_attachments: bool = False) -> List[Dict[str, Any]]:
+                    with_attachments: bool = False,
+                    strategy: str = "hybrid",
+                    mode: str = "websearch",
+                    similarity_threshold: float = 0.3,
+                    order_by: str = "relevance",
+                    order_dir: str = "desc",
+                    offset: int = 0,
+                    file_type: Optional[str] = None,
+                    mime_type: Optional[str] = None) -> List[Dict[str, Any]]:
         """Search through notetaker notes with comprehensive filtering.
 
         Args:
@@ -144,8 +152,19 @@ class AigonClient:
             'note_type': note_type,
             'reverse': reverse,
             'show_delegated': show_delegated,
-            'with_attachments': with_attachments
+            'with_attachments': with_attachments,
+            'strategy': strategy,
+            'mode': mode,
+            'similarity_threshold': similarity_threshold,
+            'order_by': order_by,
+            'order_dir': order_dir,
+            'offset': offset,
         }
+
+        if file_type:
+            params['file_type'] = file_type
+        if mime_type:
+            params['mime_type'] = mime_type
 
         if content_type:
             params['content_type'] = content_type

@@ -427,7 +427,15 @@ def search_notes(client: AigonClient, query: str, content_type: Optional[str] = 
                 note_type: str = "user",
                 reverse: bool = False,
                 agent_filter: Optional[str] = None,
-                show_delegated: bool = True) -> None:
+                show_delegated: bool = True,
+                strategy: str = "hybrid",
+                mode: str = "websearch",
+                similarity_threshold: float = 0.3,
+                order_by: str = "relevance",
+                order_dir: str = "desc",
+                offset: int = 0,
+                file_type: Optional[str] = None,
+                mime_type: Optional[str] = None) -> None:
     """Search notes in Notetaker with advanced filtering.
 
     Args:
@@ -484,7 +492,15 @@ def search_notes(client: AigonClient, query: str, content_type: Optional[str] = 
             reverse=reverse,
             agent_filter=agent_filter,
             show_delegated=show_delegated,
-            with_attachments=True
+            with_attachments=True,
+            strategy=strategy,
+            mode=mode,
+            similarity_threshold=similarity_threshold,
+            order_by=order_by,
+            order_dir=order_dir,
+            offset=offset,
+            file_type=file_type,
+            mime_type=mime_type,
         )
 
         # Extract unique_ids from FTS results and fetch full notes
@@ -1080,9 +1096,29 @@ def register_notetaker_commands(subparsers):
     search_parser.add_argument('--no-show-delegated', dest='show_delegated', action='store_false',
                             help='Exclude notes delegated to you, show only notes you own')
 
-    # Event admin access (NOT YET IMPLEMENTED for search - use read command)
-    # search_parser.add_argument('--event', dest='event',
-    #                         help='Event name to access participant notes (admin only). Empty results may indicate not authorized.')
+    # Search strategy options
+    search_parser.add_argument('--strategy', default='hybrid',
+                            choices=['hybrid', 'fts', 'ilike', 'similarity', 'vector', 'all'],
+                            help='Search strategy: hybrid (default), fts, ilike, similarity, vector, all')
+    search_parser.add_argument('--mode', default='websearch',
+                            choices=['websearch', 'plain', 'phrase', 'raw'],
+                            help='FTS query parsing: websearch (default), plain, phrase, raw')
+    search_parser.add_argument('--similarity-threshold', type=float, default=0.3,
+                            help='Minimum pg_trgm similarity score 0.0-1.0 (default: 0.3)')
+
+    # Sort options
+    search_parser.add_argument('--order-by', choices=['relevance', 'created', 'updated'], default='relevance',
+                            help='Sort order (default: relevance)')
+    search_parser.add_argument('--order-dir', choices=['desc', 'asc'], default='desc',
+                            help='Sort direction (default: desc)')
+    search_parser.add_argument('--offset', type=int, default=0,
+                            help='Skip first N results (for pagination)')
+
+    # Attachment type filters
+    search_parser.add_argument('--file-type', dest='file_type',
+                            help='Comma-separated attachment file types: audio,voice,image,document,video,archive')
+    search_parser.add_argument('--mime-type', dest='mime_type',
+                            help='Comma-separated MIME types: text/markdown,application/pdf')
 
     # Read notes command
     read_parser = notetaker_subparsers.add_parser('read', help='Read notes (recent or by ID)')
@@ -1365,7 +1401,15 @@ def handle_notetaker_command(args, client: AigonClient):
                     note_type=note_type,
                     reverse=reverse,
                     agent_filter=getattr(args, 'agent_filter', None),
-                    show_delegated=getattr(args, 'show_delegated', True))
+                    show_delegated=getattr(args, 'show_delegated', True),
+                    strategy=getattr(args, 'strategy', 'hybrid'),
+                    mode=getattr(args, 'mode', 'websearch'),
+                    similarity_threshold=getattr(args, 'similarity_threshold', 0.3),
+                    order_by=getattr(args, 'order_by', 'relevance'),
+                    order_dir=getattr(args, 'order_dir', 'desc'),
+                    offset=getattr(args, 'offset', 0),
+                    file_type=getattr(args, 'file_type', None),
+                    mime_type=getattr(args, 'mime_type', None))
     elif args.notetaker_command == 'read':
         unique_ids = getattr(args, 'unique_ids', [])
 

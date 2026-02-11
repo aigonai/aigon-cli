@@ -166,7 +166,7 @@ class TestFormatNoteLLM:
 class TestSearchNotesOutput:
     """Tests for search_notes output sanitization."""
 
-    @patch('app.infrastructure.restapi_cli.notetaker.AigonClient')
+    @patch('aigon_cli.notetaker.AigonClient')
     def test_search_json_output_sanitized(self, mock_client_class):
         """Test that search JSON output is sanitized."""
         # Setup mock client
@@ -205,7 +205,7 @@ class TestSearchNotesOutput:
         assert 'agent' not in result[0]
         assert result[0]['unique_id'] == 'abc123'
 
-    @patch('app.infrastructure.restapi_cli.notetaker.AigonClient')
+    @patch('aigon_cli.notetaker.AigonClient')
     def test_search_llm_format_is_default(self, mock_client_class):
         """Test that LLM format is the default for search."""
         mock_client = MagicMock()
@@ -245,7 +245,7 @@ class TestSearchNotesOutput:
 class TestRecentNotesOutput:
     """Tests for recent_notes output sanitization."""
 
-    @patch('app.infrastructure.restapi_cli.notetaker.AigonClient')
+    @patch('aigon_cli.notetaker.AigonClient')
     def test_recent_json_output_sanitized(self, mock_client_class):
         """Test that recent_notes JSON output is sanitized."""
         mock_client = MagicMock()
@@ -274,7 +274,7 @@ class TestRecentNotesOutput:
 class TestGetNotesByIdOutput:
     """Tests for get_notes_by_id output sanitization."""
 
-    @patch('app.infrastructure.restapi_cli.notetaker.AigonClient')
+    @patch('aigon_cli.notetaker.AigonClient')
     def test_get_by_id_json_output_sanitized(self, mock_client_class):
         """Test that get_notes_by_id JSON output is sanitized."""
         mock_client = MagicMock()
@@ -301,7 +301,7 @@ class TestGetNotesByIdOutput:
         assert 'att_id' not in result[0]
         assert result[0]['unique_id'] == 'def456'
 
-    @patch('app.infrastructure.restapi_cli.notetaker.AigonClient')
+    @patch('aigon_cli.notetaker.AigonClient')
     def test_get_by_id_llm_format_is_default(self, mock_client_class):
         """Test that LLM format is the default for get_notes_by_id."""
         mock_client = MagicMock()
@@ -363,7 +363,7 @@ class TestInternalFieldsNeverExposed:
 class TestMarkNotesOutput:
     """Tests for mark_notes output formats."""
 
-    @patch('app.infrastructure.restapi_cli.notetaker.AigonClient')
+    @patch('aigon_cli.notetaker.AigonClient')
     def test_mark_notes_llm_format_is_concise(self, mock_client_class):
         """Test that mark_notes LLM format is very concise."""
         from aigon_cli.notetaker import mark_notes
@@ -384,7 +384,7 @@ class TestMarkNotesOutput:
         # LLM format should be very concise - single line
         assert output.strip() == "Marked 3 note(s) as processed"
 
-    @patch('app.infrastructure.restapi_cli.notetaker.AigonClient')
+    @patch('aigon_cli.notetaker.AigonClient')
     def test_mark_notes_json_format_full_details(self, mock_client_class):
         """Test that mark_notes JSON format returns full details."""
         from aigon_cli.notetaker import mark_notes
@@ -406,7 +406,7 @@ class TestMarkNotesOutput:
         assert result['success'] == True
         assert result['batch_size'] == 2
 
-    @patch('app.infrastructure.restapi_cli.notetaker.AigonClient')
+    @patch('aigon_cli.notetaker.AigonClient')
     def test_mark_notes_unprocessed_message(self, mock_client_class):
         """Test that unmark message says 'unprocessed'."""
         from aigon_cli.notetaker import mark_notes
@@ -424,7 +424,7 @@ class TestMarkNotesOutput:
 
         assert "unprocessed" in output
 
-    @patch('app.infrastructure.restapi_cli.notetaker.AigonClient')
+    @patch('aigon_cli.notetaker.AigonClient')
     def test_mark_notes_exported_only(self, mock_client_class):
         """Test marking as exported only (without processed)."""
         from aigon_cli.notetaker import mark_notes
@@ -442,7 +442,7 @@ class TestMarkNotesOutput:
 
         assert "exported" in output
 
-    @patch('app.infrastructure.restapi_cli.notetaker.AigonClient')
+    @patch('aigon_cli.notetaker.AigonClient')
     def test_mark_notes_both_flags(self, mock_client_class):
         """Test marking both processed and exported."""
         from aigon_cli.notetaker import mark_notes
@@ -465,7 +465,7 @@ class TestMarkNotesOutput:
 class TestFileDBListOutput:
     """Tests for filedb list output formats."""
 
-    @patch('app.infrastructure.restapi_cli.filedb.AigonClient')
+    @patch('aigon_cli.filedb.AigonClient')
     def test_list_files_llm_format_is_concise(self, mock_client_class):
         """Test that list_files LLM format is concise."""
         from aigon_cli.filedb import list_files
@@ -487,7 +487,7 @@ class TestFileDBListOutput:
         assert 'file1 (v3, ABC123)' in output
         assert 'file2 (v1, XYZ789)' in output
 
-    @patch('app.infrastructure.restapi_cli.filedb.AigonClient')
+    @patch('aigon_cli.filedb.AigonClient')
     def test_list_files_llm_is_default(self, mock_client_class):
         """Test that LLM format is the default for list_files."""
         from aigon_cli.filedb import list_files
@@ -513,7 +513,7 @@ class TestFileDBListOutput:
 class TestFileDBSearchOutput:
     """Tests for filedb search output formats."""
 
-    @patch('app.infrastructure.restapi_cli.filedb.AigonClient')
+    @patch('aigon_cli.filedb.AigonClient')
     def test_search_files_llm_format_is_concise(self, mock_client_class):
         """Test that search_files LLM format is concise."""
         from aigon_cli.filedb import search_files
@@ -536,7 +536,7 @@ class TestFileDBSearchOutput:
         assert "2 match(es) for 'meeting'" in output
         assert 'notes (v2)' in output
 
-    @patch('app.infrastructure.restapi_cli.filedb.AigonClient')
+    @patch('aigon_cli.filedb.AigonClient')
     def test_search_files_llm_is_default(self, mock_client_class):
         """Test that LLM format is the default for search_files."""
         from aigon_cli.filedb import search_files

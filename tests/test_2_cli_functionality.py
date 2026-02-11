@@ -13,7 +13,7 @@ from aigon_cli.client import AigonClient
 def test_aigon_client_initialization():
     """Test that AigonClient can be initialized properly."""
     # Test basic initialization with mock to avoid real connection
-    with patch('app.infrastructure.restapi_cli.client.requests.get') as mock_get:
+    with patch('aigon_cli.client.requests.get') as mock_get:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_get.return_value = mock_response
@@ -27,7 +27,7 @@ def test_aigon_client_initialization():
 
 def test_aigon_client_default_url():
     """Test that AigonClient uses default URL when none provided."""
-    with patch('app.infrastructure.restapi_cli.client.requests.get') as mock_get:
+    with patch('aigon_cli.client.requests.get') as mock_get:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_get.return_value = mock_response
@@ -40,7 +40,7 @@ def test_aigon_client_default_url():
 
 def test_aigon_client_api_methods_exist():
     """Test that all expected API methods exist."""
-    with patch('app.infrastructure.restapi_cli.client.requests.get') as mock_get:
+    with patch('aigon_cli.client.requests.get') as mock_get:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_get.return_value = mock_response
@@ -68,7 +68,7 @@ def test_aigon_client_api_methods_exist():
 
 def test_aigon_client_authentication_headers():
     """Test that authentication headers are set correctly."""
-    with patch('app.infrastructure.restapi_cli.client.requests.get') as mock_get:
+    with patch('aigon_cli.client.requests.get') as mock_get:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_get.return_value = mock_response
@@ -87,7 +87,7 @@ class TestSaveReportVisibility:
 
     def test_save_report_accepts_visibility_parameters(self):
         """Test that save_report method accepts event and visible_to_participants parameters."""
-        with patch('app.infrastructure.restapi_cli.client.requests.get') as mock_get:
+        with patch('aigon_cli.client.requests.get') as mock_get:
             mock_response = Mock()
             mock_response.status_code = 200
             mock_get.return_value = mock_response
@@ -104,8 +104,8 @@ class TestSaveReportVisibility:
 
     def test_save_report_sends_visibility_in_body(self):
         """Test that save_report includes visibility in request body."""
-        with patch('app.infrastructure.restapi_cli.client.requests.get') as mock_get, \
-             patch('app.infrastructure.restapi_cli.client.requests.post') as mock_post:
+        with patch('aigon_cli.client.requests.get') as mock_get, \
+             patch('aigon_cli.client.requests.post') as mock_post:
             # Mock initialization
             mock_get_response = Mock()
             mock_get_response.status_code = 200
@@ -134,8 +134,8 @@ class TestSaveReportVisibility:
 
     def test_save_report_admin_only(self):
         """Test that visible_to_participants=False creates admin-only report."""
-        with patch('app.infrastructure.restapi_cli.client.requests.get') as mock_get, \
-             patch('app.infrastructure.restapi_cli.client.requests.post') as mock_post:
+        with patch('aigon_cli.client.requests.get') as mock_get, \
+             patch('aigon_cli.client.requests.post') as mock_post:
             mock_get_response = Mock()
             mock_get_response.status_code = 200
             mock_get.return_value = mock_get_response
@@ -157,8 +157,8 @@ class TestSaveReportVisibility:
 
     def test_save_report_without_visibility(self):
         """Test that save_report works without visibility parameters."""
-        with patch('app.infrastructure.restapi_cli.client.requests.get') as mock_get, \
-             patch('app.infrastructure.restapi_cli.client.requests.post') as mock_post:
+        with patch('aigon_cli.client.requests.get') as mock_get, \
+             patch('aigon_cli.client.requests.post') as mock_post:
             mock_get_response = Mock()
             mock_get_response.status_code = 200
             mock_get.return_value = mock_get_response

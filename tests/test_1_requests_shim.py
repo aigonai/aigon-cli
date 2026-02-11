@@ -18,7 +18,7 @@ from tests.utils.signature_test_helpers import assert_signatures_match
 def test_requests_shim_functions_signature():
     """Test that requests_shim has exactly the expected functions."""
     expected_public_functions = {
-        'get', 'post', 'put', 'delete'
+        'get', 'post', 'put', 'patch', 'delete'
     }
 
     expected_private_functions = {

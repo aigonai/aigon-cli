@@ -31,7 +31,7 @@ def test_aigon_client_signature():
         'global_search',
         'get_api_info', 'get_health', 'list_endpoints',
         'archive_file', 'unarchive_file',
-        'get_note_by_id', 'get_notes_by_ids', 'mark_notes', 'delegate_notes',
+        'get_note_by_id', 'get_notes_by_ids', 'mark_notes', 'update_notes',
         'get_attachment', 'get_attachment_by_unique_id', 'save_report',
         'share_file', 'unshare_file', 'list_shared_files', 'list_files_i_shared',
         'download_resource'

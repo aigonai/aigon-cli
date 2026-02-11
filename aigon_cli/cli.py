@@ -58,7 +58,7 @@ def main():
     # aigon coach -> aigon notetaker read --agent coach (default to read)
 
     # Valid notetaker subcommands
-    NOTETAKER_SUBCOMMANDS = {'read', 'search', 'mark', 'delegate'}
+    NOTETAKER_SUBCOMMANDS = {'read', 'search', 'mark', 'delegate', 'update'}
 
     if len(sys.argv) > 1:
         if sys.argv[1] in ('coach', 'wellness'):

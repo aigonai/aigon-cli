@@ -204,6 +204,25 @@ def put(url: str, headers: Optional[Dict[str, str]] = None,
     return _make_request('PUT', url, headers=headers, params=params, data=data, json=json)
 
 
+def patch(url: str, headers: Optional[Dict[str, str]] = None,
+          params: Optional[Dict[str, Any]] = None,
+          data: Optional[str] = None,
+          json: Optional[Any] = None) -> Response:
+    """Make PATCH request.
+
+    Args:
+        url: Request URL
+        headers: Request headers
+        params: Query parameters
+        data: Raw data to send
+        json: JSON data to send
+
+    Returns:
+        Response object
+    """
+    return _make_request('PATCH', url, headers=headers, params=params, data=data, json=json)
+
+
 def delete(url: str, headers: Optional[Dict[str, str]] = None,
            params: Optional[Dict[str, Any]] = None) -> Response:
     """Make DELETE request.

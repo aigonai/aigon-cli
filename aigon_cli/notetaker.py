@@ -802,65 +802,69 @@ def mark_notes(client: AigonClient, unique_ids: list, processed: bool = None,
         sys.exit(1)
 
 
-def delegate_notes(client: AigonClient, unique_ids: list, add_delegates: str = None,
-                  remove_delegates: str = None, output_format: str = "llm") -> None:
-    """Manage note delegation - read, add, or remove delegates.
+def update_notes(client: AigonClient, unique_ids: list,
+                 tags_set: str = None, tags_add: str = None, tags_remove: str = None,
+                 summary: str = None,
+                 metadata_set: str = None, metadata_merge: str = None, metadata_remove_keys: str = None,
+                 delegates_add: str = None, delegates_remove: str = None,
+                 output_format: str = "llm") -> None:
+    """Bulk update note metadata: tags, summary, metadata, delegates.
 
     Args:
         client: Authenticated Aigon client
-        unique_ids: List of unique IDs (or prefixes) to manage
-        add_delegates: Comma-separated agents to add (e.g., "coach,wellness")
-        remove_delegates: Comma-separated agents to remove
+        unique_ids: List of unique IDs (or prefixes) to update
+        tags_set: Comma-separated tags to replace all (e.g., "a,b,c")
+        tags_add: Comma-separated tags to add
+        tags_remove: Comma-separated tags to remove
+        summary: Set summary text (use "" to clear)
+        metadata_set: JSON string to replace entire metadata
+        metadata_merge: JSON string to merge into metadata
+        metadata_remove_keys: Comma-separated keys to remove from metadata
+        delegates_add: Comma-separated agents to add (e.g., "coach,wellness")
+        delegates_remove: Comma-separated agents to remove
         output_format: Output format (llm for one-line, json for full record)
     """
     try:
-        # Parse comma-separated agents
-        add_list = [a.strip() for a in add_delegates.split(',')] if add_delegates else None
-        remove_list = [a.strip() for a in remove_delegates.split(',')] if remove_delegates else None
+        # Parse comma-separated lists
+        tags_set_list = [t.strip() for t in tags_set.split(',')] if tags_set is not None else None
+        tags_add_list = [t.strip() for t in tags_add.split(',')] if tags_add else None
+        tags_remove_list = [t.strip() for t in tags_remove.split(',')] if tags_remove else None
+        delegates_add_list = [a.strip() for a in delegates_add.split(',')] if delegates_add else None
+        delegates_remove_list = [a.strip() for a in delegates_remove.split(',')] if delegates_remove else None
+        meta_remove_keys_list = [k.strip() for k in metadata_remove_keys.split(',')] if metadata_remove_keys else None
 
-        # Check if READ mode (no add/remove) or UPDATE mode
-        if add_list is None and remove_list is None:
-            # READ mode - just fetch and show delegates
-            notes = client.get_notes_by_ids(unique_ids, context_before=0, context_after=0, with_attachments=True)
+        # Parse JSON strings for metadata
+        meta_set_dict = json.loads(metadata_set) if metadata_set else None
+        meta_merge_dict = json.loads(metadata_merge) if metadata_merge else None
 
-            if not notes:
-                print("No notes found")
-                return
+        result = client.update_notes(
+            unique_ids=unique_ids,
+            tags_set=tags_set_list,
+            tags_add=tags_add_list,
+            tags_remove=tags_remove_list,
+            summary=summary,
+            metadata_set=meta_set_dict,
+            metadata_merge=meta_merge_dict,
+            metadata_remove_keys=meta_remove_keys_list,
+            delegates_add=delegates_add_list,
+            delegates_remove=delegates_remove_list,
+        )
 
-            if output_format == "json":
-                # Full record
-                sanitized = [_sanitize_note_for_output(note) for note in notes]
-                print(json.dumps(sanitized, indent=2))
-            else:
-                # LLM format: one line per note
-                for note in notes:
-                    uid = note.get('unique_id_short', note.get('unique_id', 'unknown'))
-                    delegates = note.get('delegates', [])
-                    delegates_json = json.dumps(delegates)
-                    print(f"unique_id: {uid}  delegates: {delegates_json}")
+        if output_format == "json":
+            print(json.dumps(result, indent=2))
         else:
-            # UPDATE mode - add/remove delegates
-            result = client.delegate_notes(unique_ids=unique_ids,
-                                          add_delegates=add_list,
-                                          remove_delegates=remove_list)
-
-            if output_format == "json":
-                print(json.dumps(result, indent=2))
+            if result.get('success'):
+                batch_size = result.get('batch_size', 0)
+                operations = result.get('operations', [])
+                ops_str = ", ".join(operations) if operations else "updated"
+                print(f"Updated {batch_size} note(s): {ops_str}")
             else:
-                # LLM format: concise output
-                if result.get('success'):
-                    batch_size = result.get('batch_size', 0)
-                    actions = []
-                    if add_list:
-                        actions.append(f"added {','.join(add_list)}")
-                    if remove_list:
-                        actions.append(f"removed {','.join(remove_list)}")
-                    action_str = ", ".join(actions) if actions else "updated"
-                    print(f"Updated {batch_size} note(s): {action_str}")
-                else:
-                    print(f"Failed: {result.get('message', 'Unknown error')}", file=sys.stderr)
-                    sys.exit(1)
+                print(f"Failed: {result.get('message', 'Unknown error')}", file=sys.stderr)
+                sys.exit(1)
 
+    except json.JSONDecodeError as e:
+        print(f"Invalid JSON: {e}", file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
@@ -1214,12 +1218,40 @@ def register_notetaker_commands(subparsers):
     undelete_parser.add_argument('--format', choices=['json', 'llm'], default='llm',
                                 help='Output format (default: llm for concise output)')
 
-    # Delegate notes command
-    delegate_parser = notetaker_subparsers.add_parser('delegate', help='Manage note delegation (read/add/remove delegates)')
+    # Update notes command (bulk update: tags, summary, metadata, delegates)
+    update_parser = notetaker_subparsers.add_parser('update', help='Bulk update notes (tags, summary, metadata, delegates)')
+    update_parser.add_argument('unique_ids', nargs='+', help='Unique IDs of notes (minimum 2 characters each)')
+    # Tags
+    update_parser.add_argument('--tags-set', dest='tags_set', type=str,
+                               help='Replace all tags (comma-separated: a,b,c)')
+    update_parser.add_argument('--tags-add', dest='tags_add', type=str,
+                               help='Add tags (comma-separated: new_tag1,new_tag2)')
+    update_parser.add_argument('--tags-remove', dest='tags_remove', type=str,
+                               help='Remove tags (comma-separated: old_tag)')
+    # Summary
+    update_parser.add_argument('--summary', dest='summary', type=str,
+                               help='Set summary text (use "" to clear)')
+    # Metadata
+    update_parser.add_argument('--metadata-set', dest='metadata_set', type=str,
+                               help='Replace entire metadata (JSON string)')
+    update_parser.add_argument('--metadata-merge', dest='metadata_merge', type=str,
+                               help='Merge keys into metadata (JSON string)')
+    update_parser.add_argument('--metadata-remove-keys', dest='metadata_remove_keys', type=str,
+                               help='Remove keys from metadata (comma-separated)')
+    # Delegates
+    update_parser.add_argument('--delegates-add', dest='delegates_add', type=str,
+                               help='Add delegate agents (comma-separated: coach,wellness)')
+    update_parser.add_argument('--delegates-remove', dest='delegates_remove', type=str,
+                               help='Remove delegate agents (comma-separated)')
+    update_parser.add_argument('--format', choices=['json', 'llm'], default='llm',
+                               help='Output format (default: llm for concise output)')
+
+    # Delegate command (convenience alias for update --delegates-add/--delegates-remove)
+    delegate_parser = notetaker_subparsers.add_parser('delegate', help='Manage note delegation (alias for update --delegates-*)')
     delegate_parser.add_argument('unique_ids', nargs='+', help='Unique IDs of notes (minimum 2 characters each)')
-    delegate_parser.add_argument('--add', dest='add_delegates', type=str,
+    delegate_parser.add_argument('--add', dest='delegates_add', type=str,
                                 help='Add agents to delegates (comma-separated: coach,wellness,flat)')
-    delegate_parser.add_argument('--remove', dest='remove_delegates', type=str,
+    delegate_parser.add_argument('--remove', dest='delegates_remove', type=str,
                                 help='Remove agents from delegates (comma-separated)')
     delegate_parser.add_argument('--format', choices=['json', 'llm'], default='llm',
                                 help='Output format (default: llm for one-line output)')
@@ -1535,12 +1567,41 @@ def handle_notetaker_command(args, client: AigonClient):
     elif args.notetaker_command == 'undelete':
         # Shortcut for mark --deleted false
         mark_notes(client, unique_ids=args.unique_ids, deleted=False, output_format=args.format)
+    elif args.notetaker_command == 'update':
+        # Handle update command (full bulk update)
+        update_notes(client, unique_ids=args.unique_ids,
+                    tags_set=getattr(args, 'tags_set', None),
+                    tags_add=getattr(args, 'tags_add', None),
+                    tags_remove=getattr(args, 'tags_remove', None),
+                    summary=getattr(args, 'summary', None),
+                    metadata_set=getattr(args, 'metadata_set', None),
+                    metadata_merge=getattr(args, 'metadata_merge', None),
+                    metadata_remove_keys=getattr(args, 'metadata_remove_keys', None),
+                    delegates_add=getattr(args, 'delegates_add', None),
+                    delegates_remove=getattr(args, 'delegates_remove', None),
+                    output_format=args.format)
     elif args.notetaker_command == 'delegate':
-        # Handle delegate command
-        delegate_notes(client, unique_ids=args.unique_ids,
-                      add_delegates=getattr(args, 'add_delegates', None),
-                      remove_delegates=getattr(args, 'remove_delegates', None),
-                      output_format=args.format)
+        # Delegate is a convenience alias for update with delegates only
+        delegates_add = getattr(args, 'delegates_add', None)
+        delegates_remove = getattr(args, 'delegates_remove', None)
+        if delegates_add is None and delegates_remove is None:
+            # READ mode - just show delegates
+            notes = client.get_notes_by_ids(args.unique_ids, context_before=0, context_after=0, with_attachments=True)
+            if not notes:
+                print("No notes found")
+            elif args.format == "json":
+                sanitized = [_sanitize_note_for_output(note) for note in notes]
+                print(json.dumps(sanitized, indent=2))
+            else:
+                for note in notes:
+                    uid = note.get('unique_id_short', note.get('unique_id', 'unknown'))
+                    delegates = note.get('delegates', [])
+                    print(f"unique_id: {uid}  delegates: {json.dumps(delegates)}")
+        else:
+            update_notes(client, unique_ids=args.unique_ids,
+                        delegates_add=delegates_add,
+                        delegates_remove=delegates_remove,
+                        output_format=args.format)
     elif args.notetaker_command == 'attachment':
         # Handle attachment command
         get_attachment(client, note_id=args.note_id, filename=args.filename,
@@ -1666,8 +1727,9 @@ def handle_notetaker_command(args, client: AigonClient):
             print("Available Notetaker commands:")
             print("  search     - Search through notes with advanced filtering")
             print("  read       - Get recent notes or specific notes by ID")
+            print("  update     - Bulk update notes (tags, summary, metadata, delegates)")
             print("  mark       - Mark notes as processed/exported")
-            print("  delegate   - Manage note delegation (add/remove agents)")
+            print("  delegate   - Manage note delegation (alias for update --delegates-*)")
             print("  delete     - Delete notes (soft delete)")
             print("  undelete   - Undelete notes (restore soft-deleted)")
             print("  attachment - Get attachment content from note")

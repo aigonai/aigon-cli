@@ -441,31 +441,54 @@ class AigonClient:
         response.raise_for_status()
         return response.json()
 
-    def delegate_notes(self, unique_ids: List[str],
-                      add_delegates: Optional[List[str]] = None,
-                      remove_delegates: Optional[List[str]] = None) -> Dict[str, Any]:
-        """Manage note delegation - add or remove delegates.
+    def update_notes(self, unique_ids: List[str],
+                     tags_set: Optional[List[str]] = None,
+                     tags_add: Optional[List[str]] = None,
+                     tags_remove: Optional[List[str]] = None,
+                     summary: Optional[str] = None,
+                     metadata_set: Optional[Dict[str, Any]] = None,
+                     metadata_merge: Optional[Dict[str, Any]] = None,
+                     metadata_remove_keys: Optional[List[str]] = None,
+                     delegates_add: Optional[List[str]] = None,
+                     delegates_remove: Optional[List[str]] = None) -> Dict[str, Any]:
+        """Bulk update note metadata: tags, summary, metadata, delegates.
 
         Args:
             unique_ids: List of unique IDs or prefixes (each minimum 2 characters)
-            add_delegates: List of agents to add to delegates
-            remove_delegates: List of agents to remove from delegates
+            tags_set: Replace all tags with this list
+            tags_add: Add these tags
+            tags_remove: Remove these tags
+            summary: Set summary (empty string clears)
+            metadata_set: Replace entire metadata dict
+            metadata_merge: Upsert keys into metadata
+            metadata_remove_keys: Remove keys from metadata
+            delegates_add: Add delegate agents
+            delegates_remove: Remove delegate agents
 
         Returns:
-            Dictionary with delegation result information
-
-        Note: At least one of add_delegates or remove_delegates must be specified.
+            Dictionary with update result (success, batch_size, operations)
         """
-        if add_delegates is None and remove_delegates is None:
-            raise ValueError("At least one of 'add_delegates' or 'remove_delegates' must be specified")
+        body: Dict[str, Any] = {'unique_ids': unique_ids}
+        if tags_set is not None:
+            body['tags_set'] = tags_set
+        if tags_add is not None:
+            body['tags_add'] = tags_add
+        if tags_remove is not None:
+            body['tags_remove'] = tags_remove
+        if summary is not None:
+            body['summary'] = summary
+        if metadata_set is not None:
+            body['metadata_set'] = metadata_set
+        if metadata_merge is not None:
+            body['metadata_merge'] = metadata_merge
+        if metadata_remove_keys is not None:
+            body['metadata_remove_keys'] = metadata_remove_keys
+        if delegates_add is not None:
+            body['delegates_add'] = delegates_add
+        if delegates_remove is not None:
+            body['delegates_remove'] = delegates_remove
 
-        body = {'unique_ids': unique_ids}
-        if add_delegates is not None:
-            body['add_delegates'] = add_delegates
-        if remove_delegates is not None:
-            body['remove_delegates'] = remove_delegates
-
-        response = requests.post(f"{self.base_url}/notetaker/notes/delegate", headers=self.headers, json=body)
+        response = requests.patch(f"{self.base_url}/notetaker/notes", headers=self.headers, json=body)
         if response.status_code in [401, 403]:
             self._handle_auth_error(response)
         response.raise_for_status()

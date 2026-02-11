@@ -22,6 +22,18 @@ Optionally install the markdown viewer:
 uv tool install aigon-viewer
 ```
 
+### Standalone zipapp (no dependencies)
+
+Download the latest `aigon.pyz` from [GitHub Releases](https://github.com/aigonai/aigon-cli/releases/latest):
+
+```bash
+curl -Lo aigon.pyz https://github.com/aigonai/aigon-cli/releases/latest/download/aigon.pyz
+chmod +x aigon.pyz
+./aigon.pyz --version
+```
+
+Requires only Python 3.10+.
+
 ## Usage
 
 ```bash

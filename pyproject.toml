@@ -1,9 +1,11 @@
 [project]
 name = "aigon-cli"
-version = "0.22"
+version = "0.23"
 description = "Command-line interface for the Aigon AI assistant ecosystem"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "pyyaml>=6.0.3",
+]
 
 [project.scripts]
 aigon = "aigon_cli.cli:main"

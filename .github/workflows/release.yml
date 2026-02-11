@@ -8,12 +8,19 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write  # Required for PyPI trusted publishing
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - run: pip install uv
       - run: chmod +x build_zipapp.sh && ./build_zipapp.sh
+      - run: uv build
       - uses: softprops/action-gh-release@v2
         with:
-          files: dist/aigon.pyz
+          files: |
+            dist/aigon.pyz
+            dist/*.whl
+            dist/*.tar.gz
+      - uses: pypa/gh-action-pypi-publish@release/v1

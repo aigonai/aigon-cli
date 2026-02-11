@@ -507,6 +507,11 @@ def search_notes(client: AigonClient, query: str, content_type: Optional[str] = 
             exclude_tags=exclude_tags,
         )
 
+        # Full format: dump raw API response with match metadata (scores, match_types, relevance)
+        if output_format == "full":
+            print(json.dumps(fts_results, indent=2))
+            return
+
         # Extract unique_ids from FTS results and fetch full notes
         if fts_results:
             unique_ids = [r.get('unique_id') for r in fts_results if r.get('unique_id')]
@@ -1017,8 +1022,8 @@ def register_notetaker_commands(subparsers):
     search_parser.add_argument('--type', dest='content_type', choices=['text', 'audio', 'image'],
                             help='Filter by content type')
     search_parser.add_argument('--limit', type=int, default=None, help='Maximum results (default: 10 for llm/json, 100 for snippet/summary)')
-    search_parser.add_argument('--format', choices=['json', 'llm', 'snippet', 'summary'], default=None,
-                            help='Output format: llm (default), json, snippet (one-liner), summary (summary+len only)')
+    search_parser.add_argument('--format', choices=['json', 'llm', 'snippet', 'summary', 'full'], default=None,
+                            help='Output format: llm (default), json, snippet, summary, full (raw API response with match scores)')
     search_parser.add_argument('--download', nargs='?', const='_notes', default=None,
                             help='Download notes to files. Optionally specify directory (default: _notes)')
     search_parser.add_argument('--clear', action='store_true',

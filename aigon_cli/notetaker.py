@@ -435,7 +435,9 @@ def search_notes(client: AigonClient, query: str, content_type: Optional[str] = 
                 order_dir: str = "desc",
                 offset: int = 0,
                 file_type: Optional[str] = None,
-                mime_type: Optional[str] = None) -> None:
+                mime_type: Optional[str] = None,
+                tags: Optional[str] = None,
+                exclude_tags: Optional[str] = None) -> None:
     """Search notes in Notetaker with advanced filtering.
 
     Args:
@@ -501,6 +503,8 @@ def search_notes(client: AigonClient, query: str, content_type: Optional[str] = 
             offset=offset,
             file_type=file_type,
             mime_type=mime_type,
+            tags=tags,
+            exclude_tags=exclude_tags,
         )
 
         # Extract unique_ids from FTS results and fetch full notes
@@ -1124,6 +1128,12 @@ def register_notetaker_commands(subparsers):
     search_parser.add_argument('--mime-type', dest='mime_type',
                             help='Comma-separated MIME types: text/markdown,application/pdf')
 
+    # Tag filters
+    search_parser.add_argument('--tags', dest='tags',
+                            help='Comma-separated tags to require (AND logic, e.g., --tags twitter,important)')
+    search_parser.add_argument('--exclude-tags', dest='exclude_tags',
+                            help='Comma-separated tags to exclude (e.g., --exclude-tags spam,archive)')
+
     # Read notes command
     read_parser = notetaker_subparsers.add_parser('read', help='Read notes (recent or by ID)')
     read_parser.add_argument('unique_ids', nargs='*', help='Unique IDs to fetch (if provided, other flags are ignored)')
@@ -1441,7 +1451,9 @@ def handle_notetaker_command(args, client: AigonClient):
                     order_dir=getattr(args, 'order_dir', 'desc'),
                     offset=getattr(args, 'offset', 0),
                     file_type=getattr(args, 'file_type', None),
-                    mime_type=getattr(args, 'mime_type', None))
+                    mime_type=getattr(args, 'mime_type', None),
+                    tags=getattr(args, 'tags', None),
+                    exclude_tags=getattr(args, 'exclude_tags', None))
     elif args.notetaker_command == 'read':
         unique_ids = getattr(args, 'unique_ids', [])
 

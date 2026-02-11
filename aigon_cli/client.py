@@ -112,7 +112,9 @@ class AigonClient:
                     order_dir: str = "desc",
                     offset: int = 0,
                     file_type: Optional[str] = None,
-                    mime_type: Optional[str] = None) -> List[Dict[str, Any]]:
+                    mime_type: Optional[str] = None,
+                    tags: Optional[str] = None,
+                    exclude_tags: Optional[str] = None) -> List[Dict[str, Any]]:
         """Search through notetaker notes with comprehensive filtering.
 
         Args:
@@ -165,6 +167,10 @@ class AigonClient:
             params['file_type'] = file_type
         if mime_type:
             params['mime_type'] = mime_type
+        if tags:
+            params['tags'] = tags
+        if exclude_tags:
+            params['exclude_tags'] = exclude_tags
 
         if content_type:
             params['content_type'] = content_type

@@ -92,8 +92,12 @@ def _build_url(url: str, params: Optional[Dict[str, Any]] = None) -> str:
     if not params:
         return url
 
-    # Convert params to strings and encode
-    query = urllib.parse.urlencode(params)
+    # Filter out None and literal "null"/"None" strings
+    filtered = {k: v for k, v in params.items() if v is not None and v not in ("null", "None")}
+    if not filtered:
+        return url
+
+    query = urllib.parse.urlencode(filtered)
     separator = '&' if '?' in url else '?'
     return f"{url}{separator}{query}"
 

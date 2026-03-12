@@ -566,10 +566,16 @@ class AigonClient:
         response.raise_for_status()
 
         # Extract filename from Content-Disposition header
+        # Handles both filename="name" and filename*=UTF-8''name (RFC 5987)
         content_disp = response.headers.get('Content-Disposition', '')
         filename = 'attachment'
-        if 'filename=' in content_disp:
-            filename = content_disp.split('filename=')[1].strip('"')
+        if 'filename*=' in content_disp:
+            # Prefer RFC 5987 encoded filename (filename*=UTF-8''actual_name.ext)
+            part = content_disp.split("filename*=")[1].split(";")[0].strip()
+            if "''" in part:
+                filename = part.split("''", 1)[1]
+        elif 'filename=' in content_disp:
+            filename = content_disp.split('filename=')[1].split(";")[0].strip('"')
 
         mime_type = response.headers.get('Content-Type', 'application/octet-stream')
 

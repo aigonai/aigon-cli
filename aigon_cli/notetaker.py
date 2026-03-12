@@ -507,6 +507,11 @@ def search_notes(client: AigonClient, query: str, content_type: Optional[str] = 
             exclude_tags=exclude_tags,
         )
 
+        # Full format: dump raw API response with match metadata (scores, match_types, relevance)
+        if output_format == "full":
+            print(json.dumps(fts_results, indent=2))
+            return
+
         # Extract unique_ids from FTS results and fetch full notes
         if fts_results:
             unique_ids = [r.get('unique_id') for r in fts_results if r.get('unique_id')]
@@ -874,6 +879,19 @@ def update_notes(client: AigonClient, unique_ids: list,
         sys.exit(1)
 
 
+def _attachment_download_filename(note_uid: str, index: int, attachment_uid: str,
+                                  content_type: str, original_filename: str) -> str:
+    """Build download filename for an attachment.
+
+    Format: {note_id}_{number}_{att_id}_{type}--{original_filename}
+    Example: rkmfip_1_sIVLRMR_voice--voice_9147.ogg
+    """
+    note_short = note_uid[:6] if note_uid else "unknown"
+    att_short = attachment_uid[:7] if attachment_uid else "unknown"
+    ctype = content_type or "file"
+    return f"{note_short}_{index}_{att_short}_{ctype}--{original_filename}"
+
+
 def get_attachment(client: AigonClient, note_id: str, filename: str = None,
                   download_directory: str = None) -> None:
     """Get attachment from note.
@@ -892,7 +910,7 @@ def get_attachment(client: AigonClient, note_id: str, filename: str = None,
             [note_id],
             context_before=0,
             context_after=0,
-            with_attachments=True  # Request attachment metadata
+            with_attachments=True
         )
 
         if not notes:
@@ -900,33 +918,46 @@ def get_attachment(client: AigonClient, note_id: str, filename: str = None,
             sys.exit(1)
 
         note = notes[0]
+        note_uid = note.get('unique_id', '')
         attachments = note.get('attachments', [])
 
         if not attachments:
             print(f"Note {note_id} has no attachments", file=sys.stderr)
             sys.exit(1)
 
-        # Extract attachment unique_id from first attachment
-        attachment_unique_id = attachments[0].get('unique_id')
+        # Select attachment by index or filename
+        selected_att = None
+        selected_index = 1  # 1-based
+
+        if filename is not None and filename.isdigit():
+            index = int(filename)
+            if index < 1 or index > len(attachments):
+                print(f"Note has {len(attachments)} attachment(s), cannot get #{index}", file=sys.stderr)
+                sys.exit(1)
+            selected_att = attachments[index - 1]
+            selected_index = index
+        elif filename is not None:
+            # Match by filename
+            for i, att in enumerate(attachments):
+                att_filename = att.get('original_filename') or att.get('filename', '')
+                if att_filename == filename:
+                    selected_att = att
+                    selected_index = i + 1
+                    break
+            if selected_att is None:
+                print(f"Attachment '{filename}' not found in note {note_id}", file=sys.stderr)
+                print(f"Available: {', '.join(a.get('original_filename') or a.get('filename', '?') for a in attachments)}", file=sys.stderr)
+                sys.exit(1)
+        else:
+            selected_att = attachments[0]
+
+        attachment_unique_id = selected_att.get('unique_id')
         if not attachment_unique_id:
             print(f"Attachment unique_id not found", file=sys.stderr)
             sys.exit(1)
 
-        # Handle filename/index parameter (currently only 1 attachment per note)
-        if filename is not None and filename.isdigit():
-            index = int(filename)
-            if index != 1:
-                print(f"Note only has 1 attachment, cannot get attachment #{index}", file=sys.stderr)
-                sys.exit(1)
-        elif filename is not None:
-            # Match by filename
-            db_filename = db_att.get('original_filename') or db_att.get('filename')
-            if db_filename != filename:
-                print(f"Attachment '{filename}' not found in note {note_id}", file=sys.stderr)
-                sys.exit(1)
-
-        # Fetch attachment content by unique_id
-        attachment_data, mime_type, attachment_filename = client.get_attachment_by_unique_id(attachment_unique_id)
+        # Fetch attachment content
+        attachment_data, mime_type, original_name = client.get_attachment_by_unique_id(attachment_unique_id)
 
         if not attachment_data:
             print(f"Failed to retrieve attachment content", file=sys.stderr)
@@ -943,8 +974,10 @@ def get_attachment(client: AigonClient, note_id: str, filename: str = None,
 
         # Output or download
         if download_directory is not None:
-            # Download mode
-            output_path = os.path.join(download_directory, attachment_filename)
+            att_type = selected_att.get('file_type') or selected_att.get('content_type') or 'file'
+            out_filename = _attachment_download_filename(
+                note_uid, selected_index, attachment_unique_id, att_type, original_name)
+            output_path = os.path.join(download_directory, out_filename)
             with open(output_path, 'wb') as f:
                 f.write(attachment_data)
             print(f"Downloaded: {output_path}")
@@ -1017,8 +1050,8 @@ def register_notetaker_commands(subparsers):
     search_parser.add_argument('--type', dest='content_type', choices=['text', 'audio', 'image'],
                             help='Filter by content type')
     search_parser.add_argument('--limit', type=int, default=None, help='Maximum results (default: 10 for llm/json, 100 for snippet/summary)')
-    search_parser.add_argument('--format', choices=['json', 'llm', 'snippet', 'summary'], default=None,
-                            help='Output format: llm (default), json, snippet (one-liner), summary (summary+len only)')
+    search_parser.add_argument('--format', choices=['json', 'llm', 'snippet', 'summary', 'full'], default=None,
+                            help='Output format: llm (default), json, snippet, summary, full (raw API response with match scores)')
     search_parser.add_argument('--download', nargs='?', const='_notes', default=None,
                             help='Download notes to files. Optionally specify directory (default: _notes)')
     search_parser.add_argument('--clear', action='store_true',
@@ -1095,7 +1128,6 @@ def register_notetaker_commands(subparsers):
 
     # Agent filter
     search_parser.add_argument('--agent', dest='agent_filter',
-                            choices=['coach', 'wellness', 'flat'],
                             help='Filter by agent (shows notes owned by OR delegated to this agent)')
 
     # Delegation visibility
@@ -1157,7 +1189,6 @@ def register_notetaker_commands(subparsers):
 
     # Agent filter
     read_parser.add_argument('--agent', dest='agent_filter',
-                            choices=['coach', 'wellness', 'flat'],
                             help='Filter by agent (shows notes owned by OR delegated to this agent)')
 
     # Delegation visibility

@@ -308,15 +308,16 @@ def _save_notes_to_files(notes, directory: str, clear_directory: bool = False):
             if created_at:
                 # Convert Unix timestamp to datetime
                 dt_utc = datetime.fromtimestamp(int(created_at), tz=timezone.utc)
-                # Format as YYYYMMDD_HHMMZ
-                date_prefix = dt_utc.strftime("%Y%m%d_%H%MZ")
+                # Format as YYYYMMDD_HHMM
+                date_prefix = dt_utc.strftime("%Y%m%d_%H%M")
             else:
                 date_prefix = "unknown"
         except (ValueError, TypeError):
             date_prefix = "unknown"
 
-        # Create filename with date prefix
-        filename = f"{date_prefix}_{content_type}.md"
+        # Create filename with date prefix and unique_id
+        uid_short = unique_id[:6] if unique_id and unique_id != 'unknown' else 'unknown'
+        filename = f"{date_prefix}_{content_type}_{uid_short}.md"
         filepath = os.path.join(directory, filename)
 
         # Prepare content - use full content, no truncation

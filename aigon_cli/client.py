@@ -7,10 +7,11 @@ Agent01 REST API using standard HTTP requests.
 (c) Stefan LOESCH 2025-26. All rights reserved.
 """
 
-from . import requests_shim as requests
 import json
-from typing import Any, Dict, List, Optional, Tuple
 import logging
+from typing import Any, Dict, List, Optional, Tuple
+
+from . import requests_shim as requests
 
 logger = logging.getLogger(__name__)
 
@@ -60,31 +61,31 @@ class AigonClient:
             Exception: With clear error message about authentication
         """
         if response.status_code == 401:
-            raise Exception(f"\n❌ Authentication required - No API token provided!\n"
-                          f"\nTo fix this:\n"
-                          f"1. Get a token from @aigon_auth_bot on Telegram (https://t.me/aigon_auth_bot)\n"
-                          f"2. Send the command: /get\n"
-                          f"3. Copy the token and set the environment variable:\n"
-                          f"   export AIGON_API_TOKEN=<your-token>\n"
-                          f"\nThe AIGON_API_TOKEN environment variable is required for authentication.")
+            raise Exception("\n❌ Authentication required - No API token provided!\n"
+                          "\nTo fix this:\n"
+                          "1. Get a token from @aigon_auth_bot on Telegram (https://t.me/aigon_auth_bot)\n"
+                          "2. Send the command: /get\n"
+                          "3. Copy the token and set the environment variable:\n"
+                          "   export AIGON_API_TOKEN=<your-token>\n"
+                          "\nThe AIGON_API_TOKEN environment variable is required for authentication.")
         elif response.status_code == 403:
             if not self.api_token:
-                raise Exception(f"\n❌ Access denied - No API token provided!\n"
-                              f"\nTo fix this:\n"
-                              f"1. Get a token from @aigon_auth_bot on Telegram (https://t.me/aigon_auth_bot)\n"
-                              f"2. Send the command: /get\n"
-                              f"3. Copy the token and set the environment variable:\n"
-                              f"   export AIGON_API_TOKEN=<your-token>\n"
-                              f"\nThe AIGON_API_TOKEN environment variable is required for authentication.")
+                raise Exception("\n❌ Access denied - No API token provided!\n"
+                              "\nTo fix this:\n"
+                              "1. Get a token from @aigon_auth_bot on Telegram (https://t.me/aigon_auth_bot)\n"
+                              "2. Send the command: /get\n"
+                              "3. Copy the token and set the environment variable:\n"
+                              "   export AIGON_API_TOKEN=<your-token>\n"
+                              "\nThe AIGON_API_TOKEN environment variable is required for authentication.")
             else:
-                raise Exception(f"\n❌ Access denied - Invalid or expired API token!\n"
-                              f"\nYour current token may be invalid or expired.\n"
-                              f"\nTo fix this:\n"
-                              f"1. Get a new token from @aigon_auth_bot on Telegram (https://t.me/aigon_auth_bot)\n"
-                              f"2. Send the command: /get\n"
-                              f"3. Copy the new token and update the environment variable:\n"
-                              f"   export AIGON_API_TOKEN=<your-new-token>\n"
-                              f"\nMake sure the AIGON_API_TOKEN environment variable has the latest token.")
+                raise Exception("\n❌ Access denied - Invalid or expired API token!\n"
+                              "\nYour current token may be invalid or expired.\n"
+                              "\nTo fix this:\n"
+                              "1. Get a new token from @aigon_auth_bot on Telegram (https://t.me/aigon_auth_bot)\n"
+                              "2. Send the command: /get\n"
+                              "3. Copy the new token and update the environment variable:\n"
+                              "   export AIGON_API_TOKEN=<your-new-token>\n"
+                              "\nMake sure the AIGON_API_TOKEN environment variable has the latest token.")
 
     def search_notes(self,
                     query: str,
@@ -624,7 +625,7 @@ class AigonClient:
         params = {'system': system}
         response = requests.get(f"{self.base_url}/filedb/files", headers=self.headers, params=params)
         if response.status_code == 404:
-            raise Exception(f"Endpoint not found: GET /filedb/files - FileDB endpoints may not be registered on the server")
+            raise Exception("Endpoint not found: GET /filedb/files - FileDB endpoints may not be registered on the server")
         elif response.status_code in [401, 403]:
             self._handle_auth_error(response)
         response.raise_for_status()
@@ -695,7 +696,7 @@ class AigonClient:
                     raise Exception(f"Bad Request: {error_msg}")
             except ValueError:
                 # Response is not JSON
-                raise Exception(f"Bad Request: {response.text}")
+                raise Exception(f"Bad Request: {response.text}") from None
         response.raise_for_status()
         return response.json()
 
@@ -953,7 +954,7 @@ def main():
         return
 
     # Create client
-    client = Agent01Client(api_token=api_token)
+    client = AigonClient(api_token=api_token)
 
     try:
         # Test basic endpoints

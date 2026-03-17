@@ -8,8 +8,8 @@ operations across notes, attachments, and files.
 
 import json
 import sys
-from typing import Optional
 from datetime import datetime, timezone
+from typing import Optional
 
 from .client import AigonClient
 

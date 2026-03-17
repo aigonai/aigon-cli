@@ -5,11 +5,9 @@ Calls the unified /download/{unique_id} endpoint which auto-detects type.
 (c) Stefan LOESCH 2026. All rights reserved.
 """
 
+import mimetypes
 import os
 import sys
-import mimetypes
-from typing import Optional
-from .client import AigonClient
 
 # MIME type to extension mapping (inlined from app.common.mime_utils)
 _MIME_TO_EXTENSION = {
@@ -72,7 +70,7 @@ def handle_download_command(args, client) -> None:
                 f"Error: Resource has MIME type '{mime_type}' which cannot be displayed to stdout.",
                 file=sys.stderr
             )
-            print(f"Use --download <directory> to save the file.", file=sys.stderr)
+            print("Use --download <directory> to save the file.", file=sys.stderr)
             sys.exit(1)
 
         # Save or output

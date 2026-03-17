@@ -21,9 +21,9 @@ import platform
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Optional, Tuple
-
 
 # Config file location
 CONFIG_PATH = Path.home() / ".aigon"
@@ -287,7 +287,7 @@ def _encrypt_vendored(plaintext: bytes, key: bytes, iv: bytes) -> bytes:
     try:
         from .vendored import pyaes
     except ImportError:
-        raise RuntimeError("Vendored pyaes not available. Install or vendor pyaes first.")
+        raise RuntimeError("Vendored pyaes not available. Install or vendor pyaes first.") from None
 
     # PKCS7 padding
     block_size = 16
@@ -316,7 +316,7 @@ def _decrypt_vendored(ciphertext: bytes, key: bytes, iv: bytes) -> bytes:
     try:
         from .vendored import pyaes
     except ImportError:
-        raise RuntimeError("Vendored pyaes not available. Install or vendor pyaes first.")
+        raise RuntimeError("Vendored pyaes not available. Install or vendor pyaes first.") from None
 
     try:
         # AES-256-CBC decryption (pyaes validates PKCS7 padding internally)
@@ -325,7 +325,7 @@ def _decrypt_vendored(ciphertext: bytes, key: bytes, iv: bytes) -> bytes:
         padded += decrypter.feed()  # Final block includes padding validation
     except ValueError as e:
         # pyaes raises ValueError for invalid padding - convert to RuntimeError for consistency
-        raise RuntimeError(f"Decryption failed: {e}")
+        raise RuntimeError(f"Decryption failed: {e}") from e
 
     # Manual PKCS7 unpadding (encrypt adds padding manually before pyaes)
     if not padded:
@@ -512,7 +512,7 @@ def show_settings() -> None:
 
     # Config values
     config = load_config()
-    print(f"\nConfig Values:")
+    print("\nConfig Values:")
     if config.has_section('encryption'):
         for key, value in config.items('encryption'):
             if key == 'key':
@@ -528,26 +528,26 @@ def show_settings() -> None:
         print("  (no [encryption] section)")
 
     # Effective settings
-    print(f"\nEffective Settings:")
+    print("\nEffective Settings:")
     config_backend = get_config_backend()
     config_key = get_config_key()
     print(f"  Backend setting: {config_backend}")
     print(f"  Key configured: {'Yes' if config_key else 'No'}")
 
-    print(f"\nPlatform Information:")
+    print("\nPlatform Information:")
     print(f"  System: {info['system']}")
     print(f"  Release: {info['release']}")
     print(f"  Machine: {info['machine']}")
     print(f"  Python: {info['python_version']}")
 
-    print(f"\nBackend Availability:")
+    print("\nBackend Availability:")
     print(f"  OpenSSL: {'Available' if info['openssl_available'] else 'Not available'}")
     print(f"  PowerShell: {'Available' if info['powershell_available'] else 'Not available'}")
 
     # Check vendored availability
     vendored_available = False
     try:
-        from .vendored import pyaes
+        from .vendored import pyaes  # noqa: F401
         vendored_available = True
     except ImportError:
         pass
@@ -719,7 +719,7 @@ def register_crypto_commands(subparsers):
     crypto_subparsers = crypto_parser.add_subparsers(dest='crypto_command', help='Crypto commands')
 
     # Settings command
-    settings_parser = crypto_subparsers.add_parser('settings', help='Show encryption settings and config')
+    crypto_subparsers.add_parser('settings', help='Show encryption settings and config')
 
     # Keygen command
     keygen_parser = crypto_subparsers.add_parser('keygen', help='Generate encryption key')
@@ -737,10 +737,10 @@ def register_crypto_commands(subparsers):
                                help='Base64 ciphertext to decrypt (reads stdin if not provided)')
 
     # Test command
-    test_parser = crypto_subparsers.add_parser('test', help='Test encryption roundtrip with config')
+    crypto_subparsers.add_parser('test', help='Test encryption roundtrip with config')
 
     # Help command
-    help_parser = crypto_subparsers.add_parser('help', help='Show crypto help information')
+    crypto_subparsers.add_parser('help', help='Show crypto help information')
 
 
 def handle_crypto_command(args):
@@ -787,10 +787,8 @@ def handle_crypto_command(args):
             backends_to_test.append(('powershell', 'PowerShell/.NET'))
 
         # Check vendored
-        vendored_available = False
         try:
-            from .vendored import pyaes
-            vendored_available = True
+            from .vendored import pyaes  # noqa: F401
             backends_to_test.append(('vendored', 'Vendored (pyaes)'))
         except ImportError:
             pass
@@ -835,7 +833,7 @@ def handle_crypto_command(args):
                     results.append((backend_name, 0, 0, False))
 
             except Exception as e:
-                print(f"  Status:  ERROR")
+                print("  Status:  ERROR")
                 print(f"  Error:   {str(e)[:60]}")
                 all_passed = False
                 results.append((backend_name, 0, 0, False))

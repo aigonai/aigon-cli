@@ -7,10 +7,9 @@ Converts VTT transcript files to clean Markdown format
 """
 
 import re
-from pathlib import Path
-from datetime import datetime
 import sys
-import argparse
+from datetime import datetime
+from pathlib import Path
 
 
 def parse_timestamp(timestamp_str):
@@ -22,7 +21,7 @@ def parse_timestamp(timestamp_str):
         minutes = int(parts[1])
         seconds = float(parts[2])
         return hours * 3600 + minutes * 60 + seconds
-    except:
+    except (ValueError, IndexError):
         return None
 
 
@@ -255,7 +254,7 @@ def extract_date_from_filename(filename):
             date_obj = datetime.strptime(date_str, '%Y%m%d')
             # Include day of week
             return date_obj.strftime('%a %B %d, %Y')
-        except:
+        except (ValueError, IndexError):
             pass
     return None
 
@@ -278,7 +277,7 @@ def convert_vtt_to_md(vtt_path, output_path=None, title=None, format_type='markd
 
     # Generate title if not provided
     if not title:
-        title = f"Meeting Transcript"
+        title = "Meeting Transcript"
 
     # Format as Markdown
     markdown = format_as_markdown(dialogues, metadata=metadata, title=title, date=date, format_type=format_type)
@@ -329,7 +328,7 @@ def convert_directory(directory, output_dir=None, format_type='markdown'):
 
         convert_vtt_to_md(vtt_file, output_path, format_type=format_type)
 
-    print(f"\n✓ Conversion complete!", file=sys.stderr)
+    print("\n✓ Conversion complete!", file=sys.stderr)
 
 
 def register_vtt2md_commands(subparsers):

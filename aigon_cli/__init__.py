@@ -7,6 +7,6 @@ for operations like file management, note searching, and data access.
 (c) Stefan LOESCH 2025-26. All rights reserved.
 """
 
-from .version import __version__, __date__
+from .version import __date__, __version__
 
 __all__ = ['__version__', '__date__']

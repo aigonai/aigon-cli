@@ -60,6 +60,8 @@ def main():
 
     # Valid notetaker subcommands
     NOTETAKER_SUBCOMMANDS = {'read', 'search', 'mark', 'delegate', 'update'}
+    # Subcommands that accept --agent filter
+    AGENT_FILTER_SUBCOMMANDS = {'read', 'search'}
 
     if len(sys.argv) > 1:
         if sys.argv[1] in ('coach', 'wellness', 'walkthru', 'mailbox'):
@@ -69,8 +71,9 @@ def main():
             # Check if there's a notetaker subcommand
             if len(sys.argv) > 2 and sys.argv[2] in NOTETAKER_SUBCOMMANDS:
                 # Has valid subcommand: aigon coach read ... -> aigon notetaker read ... --agent coach
-                # Append --agent at the end
-                sys.argv.extend(['--agent', agent_name])
+                # Only append --agent for subcommands that accept it
+                if sys.argv[2] in AGENT_FILTER_SUBCOMMANDS:
+                    sys.argv.extend(['--agent', agent_name])
             elif len(sys.argv) > 2 and not sys.argv[2].startswith('-'):
                 # Has something that's not a valid notetaker subcommand and not a flag
                 # This is invalid usage - let argparse handle the error

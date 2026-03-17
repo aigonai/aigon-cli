@@ -55,13 +55,14 @@ def main():
     # Handle shortcuts by transforming sys.argv before parsing
     # aigon coach read -> aigon notetaker read --agent coach
     # aigon wellness search -> aigon notetaker search --agent wellness
+    # aigon mailbox read -> aigon notetaker read --agent mailbox
     # aigon coach -> aigon notetaker read --agent coach (default to read)
 
     # Valid notetaker subcommands
     NOTETAKER_SUBCOMMANDS = {'read', 'search', 'mark', 'delegate', 'update'}
 
     if len(sys.argv) > 1:
-        if sys.argv[1] in ('coach', 'wellness'):
+        if sys.argv[1] in ('coach', 'wellness', 'walkthru', 'mailbox'):
             agent_name = sys.argv[1]
             sys.argv[1] = 'notetaker'
 

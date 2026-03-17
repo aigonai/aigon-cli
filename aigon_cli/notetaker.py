@@ -8,11 +8,11 @@ including search and recent notes retrieval.
 
 import json
 import os
-import sys
 import shutil
-from typing import Optional, List
-from datetime import datetime, timezone
+import sys
 import time
+from datetime import datetime, timezone
+from typing import List, Optional
 
 from .client import AigonClient
 
@@ -308,15 +308,16 @@ def _save_notes_to_files(notes, directory: str, clear_directory: bool = False):
             if created_at:
                 # Convert Unix timestamp to datetime
                 dt_utc = datetime.fromtimestamp(int(created_at), tz=timezone.utc)
-                # Format as YYYYMMDD_HHMMZ
-                date_prefix = dt_utc.strftime("%Y%m%d_%H%MZ")
+                # Format as YYYYMMDD_HHMM
+                date_prefix = dt_utc.strftime("%Y%m%d_%H%M")
             else:
                 date_prefix = "unknown"
         except (ValueError, TypeError):
             date_prefix = "unknown"
 
-        # Create filename with date prefix
-        filename = f"{date_prefix}_{content_type}.md"
+        # Create filename with date prefix and unique_id
+        uid_short = unique_id[:6] if unique_id and unique_id != 'unknown' else 'unknown'
+        filename = f"{date_prefix}_{content_type}_{uid_short}.md"
         filepath = os.path.join(directory, filename)
 
         # Prepare content - use full content, no truncation
@@ -340,7 +341,7 @@ def _save_notes_to_files(notes, directory: str, clear_directory: bool = False):
             except (ValueError, TypeError):
                 metadata += f"created_at: {created_at}\n"
         else:
-            metadata += f"created_at: unknown\n"
+            metadata += "created_at: unknown\n"
 
         # Add export and processed timestamps in Zulu format
         exported_at = note.get('exported_at')
@@ -953,14 +954,14 @@ def get_attachment(client: AigonClient, note_id: str, filename: str = None,
 
         attachment_unique_id = selected_att.get('unique_id')
         if not attachment_unique_id:
-            print(f"Attachment unique_id not found", file=sys.stderr)
+            print("Attachment unique_id not found", file=sys.stderr)
             sys.exit(1)
 
         # Fetch attachment content
         attachment_data, mime_type, original_name = client.get_attachment_by_unique_id(attachment_unique_id)
 
         if not attachment_data:
-            print(f"Failed to retrieve attachment content", file=sys.stderr)
+            print("Failed to retrieve attachment content", file=sys.stderr)
             sys.exit(1)
 
         # Check if MIME type is displayable (text-based)
@@ -969,7 +970,7 @@ def get_attachment(client: AigonClient, note_id: str, filename: str = None,
         # Require --download for non-displayable content
         if not is_displayable and download_directory is None:
             print(f"Error: Attachment has MIME type '{mime_type}' which cannot be displayed to stdout.", file=sys.stderr)
-            print(f"Use --download to save the file.", file=sys.stderr)
+            print("Use --download to save the file.", file=sys.stderr)
             sys.exit(1)
 
         # Output or download

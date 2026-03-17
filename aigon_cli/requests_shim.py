@@ -9,9 +9,9 @@ actually used by the Aigon CLI client.
 """
 
 import json as json_module
-import urllib.request
-import urllib.parse
 import urllib.error
+import urllib.parse
+import urllib.request
 from typing import Any, Dict, Optional
 
 
@@ -154,7 +154,7 @@ def _make_request(method: str, url: str,
         # This allows checking status_code and calling json() on error responses
         return Response(e, full_url)
     except urllib.error.URLError as e:
-        raise HTTPError(f"URL error: {e.reason}")
+        raise HTTPError(f"URL error: {e.reason}") from e
 
 
 def get(url: str, headers: Optional[Dict[str, str]] = None,

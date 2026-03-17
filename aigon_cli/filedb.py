@@ -6,16 +6,17 @@ including list, read, and write operations.
 (c) Stefan LOESCH 2025-26. All rights reserved.
 """
 
+import hashlib
+import json
 import os
 import re
-import json
-import sys
 import shutil
-import hashlib
-import yaml
-from typing import Optional, List
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
+from typing import List, Optional
+
+import yaml
 
 from .client import AigonClient
 
@@ -245,7 +246,7 @@ def download_file(client: AigonClient, basename: str, namespace: str = "user/",
         print(f"Content length: {len(content)} characters")
         print(f"MD5 Hash: {hash_md5}")
         if backup_created:
-            print(f"Previous version backed up to .backup/ folder")
+            print("Previous version backed up to .backup/ folder")
 
     except Exception as e:
         print(f"Error downloading file: {e}", file=sys.stderr)
@@ -753,7 +754,7 @@ def read_all_files(client: AigonClient, namespace: str = "user/", overwrite: boo
                 # Check if file exists
                 if local_path.exists():
                     if not overwrite:
-                        print(f"SKIPPED (exists, use --overwrite)")
+                        print("SKIPPED (exists, use --overwrite)")
                         continue
 
                     # Create backup
@@ -766,7 +767,7 @@ def read_all_files(client: AigonClient, namespace: str = "user/", overwrite: boo
 
                     shutil.copy2(local_path, backup_path)
                     backup_count += 1
-                    print(f"backed up, ", end="")
+                    print("backed up, ", end="")
 
                 # Write to local file
                 with open(local_path, 'w', encoding='utf-8') as f:
@@ -826,7 +827,7 @@ def update_all_files(client: AigonClient, namespace: str = "user/", overwrite: b
             if not local_files and not hidden_local_files:
                 print("No local .md files found")
             elif not local_files_to_check and hidden_local_files:
-                print(f"No visible local .md files found")
+                print("No visible local .md files found")
                 print(f"Note: {len(hidden_local_files)} files starting with '_' are hidden. Use --include-hidden to check all files.")
             return
 
@@ -875,7 +876,7 @@ def update_all_files(client: AigonClient, namespace: str = "user/", overwrite: b
                 files_current.append(basename)
 
         # Report results
-        print(f"\nHash comparison results:")
+        print("\nHash comparison results:")
         print(f"  ✅ Files already current: {len(files_current)}")
         print(f"  🔄 Files needing updates: {len(files_to_update)}")
         if files_not_in_remote:
@@ -886,7 +887,7 @@ def update_all_files(client: AigonClient, namespace: str = "user/", overwrite: b
             return
 
         # Show files that need updating
-        print(f"\nFiles needing updates (hash mismatch):")
+        print("\nFiles needing updates (hash mismatch):")
         for file_info in files_to_update:
             basename = file_info['basename']
             local_hash_short = file_info['local_hash'][:16]
@@ -895,7 +896,7 @@ def update_all_files(client: AigonClient, namespace: str = "user/", overwrite: b
             print(f"  🔄 {basename} (local: {local_hash_short}..., remote: {remote_hash_short}... v{version})")
 
         if files_not_in_remote:
-            print(f"\nFiles only in local (not in FileDB):")
+            print("\nFiles only in local (not in FileDB):")
             for basename in files_not_in_remote:
                 print(f"  ❌ {basename}")
 
@@ -939,7 +940,7 @@ def update_all_files(client: AigonClient, namespace: str = "user/", overwrite: b
                 # Create backup if file exists
                 if local_path.exists():
                     if not overwrite:
-                        print(f"SKIPPED (exists, use --overwrite)")
+                        print("SKIPPED (exists, use --overwrite)")
                         continue
 
                     backup_dir = Path(".backup")
@@ -951,7 +952,7 @@ def update_all_files(client: AigonClient, namespace: str = "user/", overwrite: b
 
                     shutil.copy2(local_path, backup_path)
                     backup_count += 1
-                    print(f"backed up, ", end="")
+                    print("backed up, ", end="")
 
                 # Write to local file
                 with open(local_path, 'w', encoding='utf-8') as f:
@@ -999,7 +1000,6 @@ def write_all_files(client: AigonClient, namespace: str = "user/", pattern: str 
     try:
         # Find all matching files
         from pathlib import Path
-        import glob
 
         all_files = list(Path(".").glob(pattern))
 
@@ -1062,7 +1062,7 @@ def write_all_files(client: AigonClient, namespace: str = "user/", pattern: str 
 
         # Report results
         total_to_upload = len(files_to_upload) + len(new_files)
-        print(f"\nHash comparison results:")
+        print("\nHash comparison results:")
         print(f"  ✅ Files already current: {len(files_current)}")
         print(f"  🔄 Files needing updates: {len(files_to_upload)}")
         print(f"  ➕ New files to upload: {len(new_files)}")
@@ -1073,13 +1073,13 @@ def write_all_files(client: AigonClient, namespace: str = "user/", pattern: str 
 
         # Show files that need uploading
         if files_to_upload:
-            print(f"\nFiles needing updates (hash mismatch):")
+            print("\nFiles needing updates (hash mismatch):")
             for file_path in files_to_upload:
                 basename = file_path.stem
                 print(f"  🔄 {basename}")
 
         if new_files:
-            print(f"\nNew files to upload:")
+            print("\nNew files to upload:")
             for file_path in new_files:
                 basename = file_path.stem
                 print(f"  ➕ {basename}")
@@ -1560,7 +1560,6 @@ def init_workspace(client: AigonClient, force: bool = False) -> None:
 
             for file_info in command_files:
                 basename = file_info.get('basename', '')
-                version = file_info.get('version', 'unknown')
 
                 # Transform filename: command-X or command_X -> X (replacing all - with _)
                 if basename.startswith('command-'):
@@ -1642,12 +1641,12 @@ def init_workspace(client: AigonClient, force: bool = False) -> None:
         print("\nDownloading user workspace files...")
         read_all_files(client, namespace="user/", overwrite=True, include_hidden=True)  # Include hidden files for init
 
-        print(f"\n✅ Workspace initialized successfully!")
-        print(f"Structure created:")
-        print(f"  .claude/commands/ - System command files")
-        print(f"  *.md files - User workspace files")
+        print("\n✅ Workspace initialized successfully!")
+        print("Structure created:")
+        print("  .claude/commands/ - System command files")
+        print("  *.md files - User workspace files")
         if Path("_conflict.toml").exists():
-            print(f"  _conflict.toml - Special configuration file")
+            print("  _conflict.toml - Special configuration file")
 
     except Exception as e:
         print(f"Error initializing workspace: {e}", file=sys.stderr)
@@ -1708,7 +1707,6 @@ def search_files(client: AigonClient,
             if not matches:
                 print(f"No files found matching '{query}'")
                 return
-            total = result.get('total_matches', len(matches))
             print(f"{len(matches)} match(es) for '{query}':")
             for f in matches:
                 name = f.get('basename', 'unknown')

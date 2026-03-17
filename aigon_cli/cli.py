@@ -11,19 +11,19 @@ import argparse
 import os
 import sys
 
-from .version import __version__, __date__
 from .client import AigonClient
-from .config import get_api_token, get_api_url, register_config_commands, handle_config_command, set_config_path
-from .filedb import register_filedb_commands, handle_filedb_command
-from .notetaker import register_notetaker_commands, handle_notetaker_command
-from .fileserver import register_fileserver_commands, handle_fileserver_command
-from .llm import register_llm_commands, handle_llm_command
-from .crypto import register_crypto_commands, handle_crypto_command
-from .vtt2md import register_vtt2md_commands, handle_vtt2md_command
-from .report import register_report_commands, handle_report_command
-from .event import register_event_commands, handle_event_command, get_event_token
-from .download import register_download_commands, handle_download_command
-from .search import register_search_commands, handle_search_command
+from .config import get_api_token, get_api_url, handle_config_command, register_config_commands, set_config_path
+from .crypto import handle_crypto_command, register_crypto_commands
+from .download import handle_download_command, register_download_commands
+from .event import get_event_token, handle_event_command, register_event_commands
+from .filedb import handle_filedb_command, register_filedb_commands
+from .fileserver import handle_fileserver_command, register_fileserver_commands
+from .llm import handle_llm_command, register_llm_commands
+from .notetaker import handle_notetaker_command, register_notetaker_commands
+from .report import handle_report_command, register_report_commands
+from .search import handle_search_command, register_search_commands
+from .version import __date__, __version__
+from .vtt2md import handle_vtt2md_command, register_vtt2md_commands
 
 
 def create_client(base_url: str, token: str) -> AigonClient:
@@ -55,21 +55,25 @@ def main():
     # Handle shortcuts by transforming sys.argv before parsing
     # aigon coach read -> aigon notetaker read --agent coach
     # aigon wellness search -> aigon notetaker search --agent wellness
+    # aigon mailbox read -> aigon notetaker read --agent mailbox
     # aigon coach -> aigon notetaker read --agent coach (default to read)
 
     # Valid notetaker subcommands
     NOTETAKER_SUBCOMMANDS = {'read', 'search', 'mark', 'delegate', 'update'}
+    # Subcommands that accept --agent filter
+    AGENT_FILTER_SUBCOMMANDS = {'read', 'search'}
 
     if len(sys.argv) > 1:
-        if sys.argv[1] in ('coach', 'wellness'):
+        if sys.argv[1] in ('coach', 'wellness', 'walkthru', 'mailbox'):
             agent_name = sys.argv[1]
             sys.argv[1] = 'notetaker'
 
             # Check if there's a notetaker subcommand
             if len(sys.argv) > 2 and sys.argv[2] in NOTETAKER_SUBCOMMANDS:
                 # Has valid subcommand: aigon coach read ... -> aigon notetaker read ... --agent coach
-                # Append --agent at the end
-                sys.argv.extend(['--agent', agent_name])
+                # Only append --agent for subcommands that accept it
+                if sys.argv[2] in AGENT_FILTER_SUBCOMMANDS:
+                    sys.argv.extend(['--agent', agent_name])
             elif len(sys.argv) > 2 and not sys.argv[2].startswith('-'):
                 # Has something that's not a valid notetaker subcommand and not a flag
                 # This is invalid usage - let argparse handle the error
@@ -191,7 +195,7 @@ def main():
                 print("  hash      - Calculate MD5 hash of local file")
                 print("  init      - Initialize workspace with .claude structure and system commands")
                 print("  help      - Show FileDB help information")
-                print(f"\nFor detailed command help: aigon filedb <command> --help")
+                print("\nFor detailed command help: aigon filedb <command> --help")
                 print("For FileDB command overview: aigon filedb help")
             elif args.subcommand == 'notetaker':
                 os.system(f"{sys.executable} -m app.infrastructure.restapi_cli.cli notetaker --help")

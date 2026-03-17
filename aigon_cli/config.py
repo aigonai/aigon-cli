@@ -10,7 +10,7 @@ import configparser
 import os
 import sys
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional
 
 # Default config path, can be overridden by AIGON_CLI_CONFIG_FILE env var or --config-file CLI option
 _config_path: Optional[Path] = None
@@ -38,7 +38,7 @@ def get_config_path() -> Path:
     if local_config.exists():
         # Show warning only once per execution
         if not _local_config_warning_shown:
-            print(f"Warning: Using local config file: ./.aigon", file=sys.stderr)
+            print("Warning: Using local config file: ./.aigon", file=sys.stderr)
             _local_config_warning_shown = True
         return local_config
 

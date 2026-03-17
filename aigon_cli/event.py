@@ -8,17 +8,14 @@ including reading participant notes and viewing submission timelines.
 
 import json
 import os
-import shutil
 import sys
 import time
-from typing import Optional, List, Dict, Any, Tuple
-from datetime import datetime, timezone, timedelta
-import re
+from datetime import datetime, timezone
+from typing import Dict, List, Optional
 
 from .client import AigonClient
-from .config import get_config_value, set_config_value, load_config, save_config, get_config_path
+from .config import get_config_path, get_config_value, load_config, set_config_value
 from .tz import parse_time, parse_time_range
-
 
 # ===== Configuration Helpers =====
 
@@ -265,7 +262,7 @@ def _save_event_notes_to_files(notes: List[dict], directory: str,
             except (ValueError, TypeError):
                 metadata += f"created_at: {created_at}\n"
         else:
-            metadata += f"created_at: unknown\n"
+            metadata += "created_at: unknown\n"
 
         # Add processed timestamp
         processed_at = note.get('processed_at')
@@ -964,7 +961,7 @@ def event_status(client: AigonClient, event_name: str,
             last_time = datetime.fromtimestamp(last_ts, tz=timezone.utc).strftime('%H:%M')
             time_range = f"{first_time} - {last_time}"
         else:
-            time_range = "-"
+            time_range = "-"  # noqa: F841
 
         # Per user stats
         total_per_user = total / user_count if user_count > 0 else 0
@@ -1022,8 +1019,8 @@ def event_watch(client: AigonClient, event_name: str,
         test_only: If True, only show test user data instead of filtering them out
         filter_users: If provided, only include these user IDs (client-side filter)
     """
-    import time
     import random
+    import time
 
     # Determine timeline start time
     now = datetime.now(timezone.utc)
@@ -1037,9 +1034,7 @@ def event_watch(client: AigonClient, event_name: str,
     if test_users is None:
         test_users = get_test_users()
 
-    # Track previous state to detect changes
-    prev_unprocessed = None
-    prev_total = None
+    # prev_unprocessed / prev_total reserved for future delta display
 
     # Simulation: pre-generate all arrivals for 30 minutes, starting 5 seconds from now
     simulated_notes = []
@@ -1236,8 +1231,7 @@ def event_watch(client: AigonClient, event_name: str,
             processed = sum(1 for n in result if n.get('processed_at'))
             unprocessed = total - processed
 
-            prev_unprocessed = unprocessed
-            prev_total = total
+            # prev_unprocessed and prev_total reserved for future delta display
 
             if unprocessed > 0:
                 # TIMELINE MODE: show timeline and wait for interval
@@ -1250,7 +1244,7 @@ def event_watch(client: AigonClient, event_name: str,
                 interval_seconds = interval * 60
                 steps = 20
                 step_seconds = interval_seconds / steps
-                for i in range(steps):
+                for _i in range(steps):
                     if check_for_exit_key():
                         raise KeyboardInterrupt
                     time.sleep(step_seconds)

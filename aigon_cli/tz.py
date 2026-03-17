@@ -5,7 +5,7 @@ Uses only standard library. Falls back gracefully if zoneinfo unavailable.
 (c) Stefan LOESCH 2025-26. All rights reserved.
 """
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Union
 
 # Try to import zoneinfo (Python 3.9+)
@@ -169,7 +169,7 @@ def parse_time(time_str: str, base_date: datetime = None) -> datetime:
         minute = int(time_parts[1]) if len(time_parts) > 1 else 0
         second = int(time_parts[2]) if len(time_parts) > 2 else 0
     except ValueError:
-        raise ValueError(f"Invalid time format: {time_str}")
+        raise ValueError(f"Invalid time format: {time_str}") from None
 
     if not (0 <= hour <= 23 and 0 <= minute <= 59 and 0 <= second <= 59):
         raise ValueError(f"Invalid time values: {time_str}")

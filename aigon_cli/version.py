@@ -5,5 +5,5 @@
 
 # VERSIONHERE:AIGON_CLI
 # KEEP IN SYNC with pyproject.toml version
-__version__ = "0.24"
-__date__ = "2026-03-12"
+__version__ = "0.24.1"
+__date__ = "2026-03-17"

@@ -6,13 +6,11 @@ existing daily reports from the database to local files.
 (c) Stefan LOESCH 2025-26. All rights reserved.
 """
 
-import argparse
-import asyncio
 import json
 import logging
-from datetime import datetime, timedelta, time, timezone
+from datetime import datetime, time, timezone
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 def register_report_commands(subparsers):
@@ -192,7 +190,7 @@ def parse_date(date_str: str) -> datetime.date:
         raise ValueError(
             f"Invalid date format: {date_str}. "
             "Use YYYY-MM-DD or Unix timestamp."
-        )
+        ) from None
 
 
 def query_daily_reports(
@@ -342,7 +340,7 @@ def download_daily_reports(args) -> int:
         Exit code (0 = success, 1 = error)
     """
     from .client import AigonClient
-    from .config import get_api_url, get_api_token
+    from .config import get_api_token, get_api_url
 
     # Setup logging - simple format for CLI
     log_level = logging.DEBUG if args.verbose else logging.INFO

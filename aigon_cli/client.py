@@ -952,7 +952,8 @@ class AigonClient:
     def mailbox_send(self, to: str, subject: str,
                      text: Optional[str] = None,
                      markdown: Optional[str] = None,
-                     delay: int = 5) -> Dict[str, Any]:
+                     delay: int = 5,
+                     bcc: Optional[list] = None) -> Dict[str, Any]:
         """Send a new email from the user's mailbox.
 
         Args:
@@ -961,6 +962,7 @@ class AigonClient:
             text: Plain text body
             markdown: Markdown body (auto-generates text and html)
             delay: Delay in minutes before sending (default: 5). Use 0 for immediate.
+            bcc: Optional BCC recipients
 
         Returns:
             Dictionary with send result (success, message_id, thread_id, from)
@@ -970,6 +972,8 @@ class AigonClient:
             body['text'] = text
         if markdown:
             body['markdown'] = markdown
+        if bcc:
+            body['bcc'] = bcc
 
         response = requests.post(f"{self.base_url}/mailbox/send",
                                 headers=self.headers, json=body)
@@ -981,7 +985,8 @@ class AigonClient:
     def mailbox_reply(self, unique_id: str,
                       text: Optional[str] = None,
                       markdown: Optional[str] = None,
-                      delay: int = 5) -> Dict[str, Any]:
+                      delay: int = 5,
+                      bcc: Optional[list] = None) -> Dict[str, Any]:
         """Reply to a received email by note unique_id.
 
         Args:
@@ -989,6 +994,7 @@ class AigonClient:
             text: Plain text reply body
             markdown: Markdown reply body (auto-generates text and html)
             delay: Delay in minutes before sending (default: 5). Use 0 for immediate.
+            bcc: Optional BCC recipients
 
         Returns:
             Dictionary with send result (success, message_id, thread_id, from, to, subject)
@@ -998,6 +1004,8 @@ class AigonClient:
             body['text'] = text
         if markdown:
             body['markdown'] = markdown
+        if bcc:
+            body['bcc'] = bcc
 
         response = requests.post(f"{self.base_url}/mailbox/reply",
                                 headers=self.headers, json=body)

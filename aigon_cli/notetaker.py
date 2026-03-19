@@ -768,7 +768,8 @@ def get_notes_by_id(client: AigonClient, unique_ids: List[str],
 
 
 def mailbox_reply(client: AigonClient, unique_id: str, text: str,
-                  as_markdown: bool = False, delay: int = 5) -> None:
+                  as_markdown: bool = False, delay: int = 5,
+                  bcc: list = None) -> None:
     """Reply to a received email.
 
     Args:
@@ -777,6 +778,7 @@ def mailbox_reply(client: AigonClient, unique_id: str, text: str,
         text: Reply text
         as_markdown: If True, send text as markdown
         delay: Delay in minutes before sending (0 = immediate)
+        bcc: Optional BCC recipients
     """
     try:
         kwargs = {'unique_id': unique_id, 'delay': delay}
@@ -784,6 +786,8 @@ def mailbox_reply(client: AigonClient, unique_id: str, text: str,
             kwargs['markdown'] = text
         else:
             kwargs['text'] = text
+        if bcc:
+            kwargs['bcc'] = bcc
 
         result = client.mailbox_reply(**kwargs)
         print(f"Reply sent to {result.get('to', '?')} (subject: {result.get('subject', '?')})")
@@ -797,7 +801,8 @@ def mailbox_reply(client: AigonClient, unique_id: str, text: str,
 
 
 def mailbox_send(client: AigonClient, to: str, subject: str, text: str,
-                 as_markdown: bool = False, delay: int = 5) -> None:
+                 as_markdown: bool = False, delay: int = 5,
+                 bcc: list = None) -> None:
     """Send a new email.
 
     Args:
@@ -807,6 +812,7 @@ def mailbox_send(client: AigonClient, to: str, subject: str, text: str,
         text: Email body
         as_markdown: If True, send text as markdown
         delay: Delay in minutes before sending (0 = immediate)
+        bcc: Optional BCC recipients
     """
     try:
         kwargs = {'to': to, 'subject': subject, 'delay': delay}
@@ -814,6 +820,8 @@ def mailbox_send(client: AigonClient, to: str, subject: str, text: str,
             kwargs['markdown'] = text
         else:
             kwargs['text'] = text
+        if bcc:
+            kwargs['bcc'] = bcc
 
         result = client.mailbox_send(**kwargs)
         print(f"Email sent to {to} (subject: {subject})")
@@ -1395,6 +1403,7 @@ def register_notetaker_commands(subparsers):
                               help='Treat text as markdown (auto-generates HTML)')
     reply_parser.add_argument('--delay', type=int, default=5,
                               help='Delay in minutes before sending (default: 5). Use 0 for immediate.')
+    reply_parser.add_argument('--bcc', nargs='+', help='BCC recipients')
 
     # Send new email (mailbox only)
     send_parser = notetaker_subparsers.add_parser('send', help='Send a new email (mailbox only)')
@@ -1405,6 +1414,7 @@ def register_notetaker_commands(subparsers):
                              help='Treat text as markdown (auto-generates HTML)')
     send_parser.add_argument('--delay', type=int, default=5,
                               help='Delay in minutes before sending (default: 5). Use 0 for immediate.')
+    send_parser.add_argument('--bcc', nargs='+', help='BCC recipients')
 
     # Help command
     help_parser = notetaker_subparsers.add_parser('help', help='Show Notetaker help information')
@@ -1772,11 +1782,13 @@ def handle_notetaker_command(args, client: AigonClient):
     elif args.notetaker_command == 'reply':
         mailbox_reply(client, unique_id=args.unique_id, text=args.text,
                       as_markdown=getattr(args, 'markdown', False),
-                      delay=getattr(args, 'delay', 5))
+                      delay=getattr(args, 'delay', 5),
+                      bcc=getattr(args, 'bcc', None))
     elif args.notetaker_command == 'send':
         mailbox_send(client, to=args.to, subject=getattr(args, 'subject', ''),
                      text=args.text, as_markdown=getattr(args, 'markdown', False),
-                     delay=getattr(args, 'delay', 5))
+                     delay=getattr(args, 'delay', 5),
+                     bcc=getattr(args, 'bcc', None))
     elif args.notetaker_command == 'clear':
         clear_local(args.directory)
     elif args.notetaker_command == 'help':

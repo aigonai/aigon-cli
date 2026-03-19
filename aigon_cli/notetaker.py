@@ -789,6 +789,8 @@ def mailbox_reply(client: AigonClient, unique_id: str, text: str,
         print(f"Reply sent to {result.get('to', '?')} (subject: {result.get('subject', '?')})")
         print(f"  message_id: {result.get('message_id', '?')}")
         print(f"  from: {result.get('from', '?')}")
+        if result.get('send_at'):
+            print(f"  scheduled: {result['send_at']}")
     except Exception as e:
         print(f"Error sending reply: {e}", file=sys.stderr)
         sys.exit(1)
@@ -817,6 +819,8 @@ def mailbox_send(client: AigonClient, to: str, subject: str, text: str,
         print(f"Email sent to {to} (subject: {subject})")
         print(f"  message_id: {result.get('message_id', '?')}")
         print(f"  from: {result.get('from', '?')}")
+        if result.get('send_at'):
+            print(f"  scheduled: {result['send_at']}")
     except Exception as e:
         print(f"Error sending email: {e}", file=sys.stderr)
         sys.exit(1)

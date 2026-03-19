@@ -389,7 +389,8 @@ class AigonClient:
                          context_before: int = 0,
                          context_after: int = 0,
                          with_attachments: bool = False,
-                         with_share_signature: bool = False) -> List[Dict[str, Any]]:
+                         with_share_signature: bool = False,
+                         agent_filter: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get notes by multiple unique_ids (supports prefix matching).
 
         Args:
@@ -398,6 +399,7 @@ class AigonClient:
             context_after: Number of notes after each target to include
             with_attachments: Include attachment metadata (default False for performance)
             with_share_signature: Include share_signature for public URL generation
+            agent_filter: Filter by agent (e.g. 'mailbox') to find notes owned by that agent
 
         Returns:
             List of matching notes (with context if requested)
@@ -409,6 +411,8 @@ class AigonClient:
             body['context_after'] = context_after
         if with_share_signature:
             body['with_share_signature'] = True
+        if agent_filter is not None:
+            body['agent_filter'] = agent_filter
 
         response = requests.post(f"{self.base_url}/notetaker/notes", headers=self.headers, json=body)
         if response.status_code in [401, 403]:

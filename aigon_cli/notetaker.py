@@ -705,7 +705,8 @@ def get_notes_by_id(client: AigonClient, unique_ids: List[str],
                     clear_directory: bool = False,
                     context_before: int = 0,
                     context_after: int = 0,
-                    with_signed_urls: bool = False) -> None:
+                    with_signed_urls: bool = False,
+                    agent_filter: Optional[str] = None) -> None:
     """Get notes by unique ID(s) with optional context.
 
     Args:
@@ -717,13 +718,15 @@ def get_notes_by_id(client: AigonClient, unique_ids: List[str],
         context_before: Number of notes before each target to include
         context_after: Number of notes after each target to include
         with_signed_urls: Include share_signature for public URL generation
+        agent_filter: Filter by agent (e.g. 'mailbox') to find notes owned by that agent
     """
     try:
         notes = client.get_notes_by_ids(unique_ids,
                                         context_before=context_before,
                                         context_after=context_after,
                                         with_attachments=True,
-                                        with_share_signature=with_signed_urls)
+                                        with_share_signature=with_signed_urls,
+                                        agent_filter=agent_filter)
 
         if not notes:
             print("No notes found")
@@ -1504,7 +1507,8 @@ def handle_notetaker_command(args, client: AigonClient):
             get_notes_by_id(client, unique_ids=unique_ids, output_format=args.format,
                            download_directory=args.download, clear_directory=args.clear,
                            context_before=context_before, context_after=context_after,
-                           with_signed_urls=getattr(args, 'with_signed_urls', False))
+                           with_signed_urls=getattr(args, 'with_signed_urls', False),
+                           agent_filter=getattr(args, 'agent_filter', None))
         else:
             # Validate flag combinations
             if args.clear and args.download is None:

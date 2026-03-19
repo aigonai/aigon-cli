@@ -767,6 +767,61 @@ def get_notes_by_id(client: AigonClient, unique_ids: List[str],
         sys.exit(1)
 
 
+def mailbox_reply(client: AigonClient, unique_id: str, text: str,
+                  as_markdown: bool = False, delay: int = 5) -> None:
+    """Reply to a received email.
+
+    Args:
+        client: Authenticated Aigon client
+        unique_id: Unique ID (or prefix) of the note to reply to
+        text: Reply text
+        as_markdown: If True, send text as markdown
+        delay: Delay in minutes before sending (0 = immediate)
+    """
+    try:
+        kwargs = {'unique_id': unique_id, 'delay': delay}
+        if as_markdown:
+            kwargs['markdown'] = text
+        else:
+            kwargs['text'] = text
+
+        result = client.mailbox_reply(**kwargs)
+        print(f"Reply sent to {result.get('to', '?')} (subject: {result.get('subject', '?')})")
+        print(f"  message_id: {result.get('message_id', '?')}")
+        print(f"  from: {result.get('from', '?')}")
+    except Exception as e:
+        print(f"Error sending reply: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def mailbox_send(client: AigonClient, to: str, subject: str, text: str,
+                 as_markdown: bool = False, delay: int = 5) -> None:
+    """Send a new email.
+
+    Args:
+        client: Authenticated Aigon client
+        to: Recipient email address
+        subject: Email subject
+        text: Email body
+        as_markdown: If True, send text as markdown
+        delay: Delay in minutes before sending (0 = immediate)
+    """
+    try:
+        kwargs = {'to': to, 'subject': subject, 'delay': delay}
+        if as_markdown:
+            kwargs['markdown'] = text
+        else:
+            kwargs['text'] = text
+
+        result = client.mailbox_send(**kwargs)
+        print(f"Email sent to {to} (subject: {subject})")
+        print(f"  message_id: {result.get('message_id', '?')}")
+        print(f"  from: {result.get('from', '?')}")
+    except Exception as e:
+        print(f"Error sending email: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
 def mark_notes(client: AigonClient, unique_ids: list, processed: bool = None,
                exported: bool = None, deleted: bool = None, output_format: str = "llm") -> None:
     """Mark or unmark notes as processed, exported, and/or deleted.
@@ -1328,6 +1383,25 @@ def register_notetaker_commands(subparsers):
     clear_parser.add_argument('--directory', default='_notes',
                             help='Directory to clear (default: _notes)')
 
+    # Reply to email (mailbox only)
+    reply_parser = notetaker_subparsers.add_parser('reply', help='Reply to a received email (mailbox only)')
+    reply_parser.add_argument('unique_id', help='Unique ID of the note to reply to')
+    reply_parser.add_argument('text', help='Reply text')
+    reply_parser.add_argument('--markdown', action='store_true',
+                              help='Treat text as markdown (auto-generates HTML)')
+    reply_parser.add_argument('--delay', type=int, default=5,
+                              help='Delay in minutes before sending (default: 5). Use 0 for immediate.')
+
+    # Send new email (mailbox only)
+    send_parser = notetaker_subparsers.add_parser('send', help='Send a new email (mailbox only)')
+    send_parser.add_argument('to', help='Recipient email address')
+    send_parser.add_argument('text', help='Email body text')
+    send_parser.add_argument('--subject', default='', help='Email subject')
+    send_parser.add_argument('--markdown', action='store_true',
+                             help='Treat text as markdown (auto-generates HTML)')
+    send_parser.add_argument('--delay', type=int, default=5,
+                              help='Delay in minutes before sending (default: 5). Use 0 for immediate.')
+
     # Help command
     help_parser = notetaker_subparsers.add_parser('help', help='Show Notetaker help information')
     help_parser.add_argument('subcommand', nargs='?', help='Show help for specific Notetaker subcommand')
@@ -1691,6 +1765,14 @@ def handle_notetaker_command(args, client: AigonClient):
                    event=event,
                    visible_to_participants=visible_to_participants,
                    output_format=args.format)
+    elif args.notetaker_command == 'reply':
+        mailbox_reply(client, unique_id=args.unique_id, text=args.text,
+                      as_markdown=getattr(args, 'markdown', False),
+                      delay=getattr(args, 'delay', 5))
+    elif args.notetaker_command == 'send':
+        mailbox_send(client, to=args.to, subject=getattr(args, 'subject', ''),
+                     text=args.text, as_markdown=getattr(args, 'markdown', False),
+                     delay=getattr(args, 'delay', 5))
     elif args.notetaker_command == 'clear':
         clear_local(args.directory)
     elif args.notetaker_command == 'help':

@@ -59,9 +59,11 @@ def main():
     # aigon coach -> aigon notetaker read --agent coach (default to read)
 
     # Valid notetaker subcommands
-    NOTETAKER_SUBCOMMANDS = {'read', 'search', 'mark', 'delegate', 'update'}
+    NOTETAKER_SUBCOMMANDS = {'read', 'search', 'mark', 'delegate', 'update', 'reply', 'send'}
     # Subcommands that accept --agent filter
     AGENT_FILTER_SUBCOMMANDS = {'read', 'search'}
+    # Mailbox-only subcommands (no --agent rewrite, agent is implicit)
+    MAILBOX_ONLY_SUBCOMMANDS = {'reply', 'send'}
 
     if len(sys.argv) > 1:
         if sys.argv[1] in ('coach', 'wellness', 'walkthru', 'mailbox'):

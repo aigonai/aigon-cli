@@ -945,6 +945,67 @@ class AigonClient:
         response.raise_for_status()
         return response.json()
 
+    # =========================================================================
+    # Mailbox (send/reply)
+    # =========================================================================
+
+    def mailbox_send(self, to: str, subject: str,
+                     text: Optional[str] = None,
+                     markdown: Optional[str] = None,
+                     delay: int = 5) -> Dict[str, Any]:
+        """Send a new email from the user's mailbox.
+
+        Args:
+            to: Recipient email address
+            subject: Email subject
+            text: Plain text body
+            markdown: Markdown body (auto-generates text and html)
+            delay: Delay in minutes before sending (default: 5). Use 0 for immediate.
+
+        Returns:
+            Dictionary with send result (success, message_id, thread_id, from)
+        """
+        body = {'to': to, 'subject': subject, 'delay': delay}
+        if text:
+            body['text'] = text
+        if markdown:
+            body['markdown'] = markdown
+
+        response = requests.post(f"{self.base_url}/mailbox/send",
+                                headers=self.headers, json=body)
+        if response.status_code in [401, 403]:
+            self._handle_auth_error(response)
+        response.raise_for_status()
+        return response.json()
+
+    def mailbox_reply(self, unique_id: str,
+                      text: Optional[str] = None,
+                      markdown: Optional[str] = None,
+                      delay: int = 5) -> Dict[str, Any]:
+        """Reply to a received email by note unique_id.
+
+        Args:
+            unique_id: Unique ID (or prefix) of the note to reply to
+            text: Plain text reply body
+            markdown: Markdown reply body (auto-generates text and html)
+            delay: Delay in minutes before sending (default: 5). Use 0 for immediate.
+
+        Returns:
+            Dictionary with send result (success, message_id, thread_id, from, to, subject)
+        """
+        body = {'unique_id': unique_id, 'delay': delay}
+        if text:
+            body['text'] = text
+        if markdown:
+            body['markdown'] = markdown
+
+        response = requests.post(f"{self.base_url}/mailbox/reply",
+                                headers=self.headers, json=body)
+        if response.status_code in [401, 403]:
+            self._handle_auth_error(response)
+        response.raise_for_status()
+        return response.json()
+
 
 def main():
     """Example usage of the Agent01 client."""

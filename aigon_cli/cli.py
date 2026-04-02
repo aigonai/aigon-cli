@@ -140,14 +140,18 @@ def main():
 
     if args.version:
         print(f"aigon {__version__} ({__date__})")
+        api_url = args.url or get_api_url()
         try:
             from . import requests_shim as requests
-            api_url = args.url or get_api_url()
             resp = requests.get(f"{api_url}/health")
             health = resp.json()
-            print(f"restapi {health.get('version', '?')} @ {api_url}")
+            status = health.get('status', 'unknown')
+            version_str = f"restapi {health.get('version', '?')} @ {api_url}"
+            if status != 'healthy':
+                version_str += f" (STATUS: {status})"
+            print(version_str)
         except Exception:
-            pass
+            print(f"restapi UNREACHABLE @ {api_url}", file=sys.stderr)
         sys.exit(0)
 
     if not args.command:

@@ -91,8 +91,8 @@ def main():
         epilog=f'Version {__version__} ({__date__})'
     )
 
-    parser.add_argument('--version', action='version',
-                       version=f'aigon {__version__} ({__date__})')
+    parser.add_argument('--version', action='store_true',
+                       help='Show version information')
 
     parser.add_argument('--config-file',
                        help='Config file path (default: ~/.aigon or AIGON_CLI_CONFIG_FILE env var)')
@@ -137,6 +137,25 @@ def main():
     # Set config file path if specified (before any config access)
     if args.config_file:
         set_config_path(args.config_file)
+
+    if args.version:
+        print(f"aigon {__version__} ({__date__})")
+        try:
+            from . import requests_shim as requests
+            api_url = args.url or get_api_url()
+            resp = requests.get(f"{api_url}/health")
+            health = resp.json()
+            print(f"restapi {health.get('version', '?')} @ {api_url}")
+            print(f"  status: {health.get('status', '?')}, server: {health.get('server', '?')}")
+            uptime = health.get('uptime_seconds')
+            if uptime is not None:
+                days, rem = divmod(int(uptime), 86400)
+                hours, rem = divmod(rem, 3600)
+                minutes = rem // 60
+                print(f"  uptime: {days}d {hours}h {minutes}m")
+        except Exception:
+            pass
+        sys.exit(0)
 
     if not args.command:
         parser.print_help()

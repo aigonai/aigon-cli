@@ -146,13 +146,6 @@ def main():
             resp = requests.get(f"{api_url}/health")
             health = resp.json()
             print(f"restapi {health.get('version', '?')} @ {api_url}")
-            print(f"  status: {health.get('status', '?')}, server: {health.get('server', '?')}")
-            uptime = health.get('uptime_seconds')
-            if uptime is not None:
-                days, rem = divmod(int(uptime), 86400)
-                hours, rem = divmod(rem, 3600)
-                minutes = rem // 60
-                print(f"  uptime: {days}d {hours}h {minutes}m")
         except Exception:
             pass
         sys.exit(0)

@@ -277,13 +277,14 @@ def _format_note_llm(note: dict, show_user_id: bool = False) -> str:
     return '\n'.join(lines)
 
 
-def _save_notes_to_files(notes, directory: str, clear_directory: bool = False):
-    """Save notes as individual markdown files.
+def _save_notes_to_files(notes, directory: str, clear_directory: bool = False, client=None):
+    """Save notes as individual markdown files, with attachments if client provided.
 
     Args:
         notes: List of note dictionaries
         directory: Directory to save files to
         clear_directory: Whether to clear directory before saving
+        client: AigonClient instance for downloading attachments (optional)
     """
     # Clear directory before saving notes if requested
     if clear_directory:
@@ -387,7 +388,29 @@ def _save_notes_to_files(notes, directory: str, clear_directory: bool = False):
 
         saved_files.append(filepath)
 
-    print(f"Saved {len(saved_files)} notes to {directory}/:")
+        # Download attachments if client is available (skip voice/audio — use `aigon download` for those)
+        if client:
+            attachments = note.get('attachments', [])
+            for i, att in enumerate(attachments, 1):
+                att_uid = att.get('unique_id')
+                if not att_uid:
+                    continue
+                att_type = (att.get('file_type') or att.get('content_type') or '').lower()
+                if att_type == 'voice':
+                    continue
+                try:
+                    att_data, _mime_type, original_name = client.get_attachment_by_unique_id(att_uid)
+                    if att_data:
+                        att_type = att.get('file_type') or att.get('content_type') or 'file'
+                        att_filename = _attachment_download_filename(unique_id, i, att_uid, att_type, original_name)
+                        att_path = os.path.join(directory, att_filename)
+                        with open(att_path, 'wb') as f:
+                            f.write(att_data)
+                        saved_files.append(att_path)
+                except Exception as e:
+                    print(f"  Warning: failed to download attachment {att_uid}: {e}", file=sys.stderr)
+
+    print(f"Saved {len(saved_files)} files to {directory}/:")
     for filepath in saved_files:
         print(f"  - {os.path.basename(filepath)}")
 
@@ -526,7 +549,7 @@ def search_notes(client: AigonClient, query: str, content_type: Optional[str] = 
         # Check if download mode or stdout mode
         if download_directory is not None:
             # Download mode: save to files
-            _save_notes_to_files(result, download_directory, clear_directory)
+            _save_notes_to_files(result, download_directory, clear_directory, client=client)
         else:
             # Stdout mode: output to console
             if output_format == "json":
@@ -642,7 +665,7 @@ def recent_notes(client: AigonClient, limit: int = 10, output_format: Optional[s
         # Check if download mode or stdout mode
         if download_directory is not None:
             # Download mode: save to files
-            _save_notes_to_files(result, download_directory, clear_directory)
+            _save_notes_to_files(result, download_directory, clear_directory, client=client)
         else:
             # Stdout mode: output to console
             if output_format == "json":
@@ -705,7 +728,8 @@ def get_notes_by_id(client: AigonClient, unique_ids: List[str],
                     clear_directory: bool = False,
                     context_before: int = 0,
                     context_after: int = 0,
-                    with_signed_urls: bool = False) -> None:
+                    with_signed_urls: bool = False,
+                    agent_filter: Optional[str] = None) -> None:
     """Get notes by unique ID(s) with optional context.
 
     Args:
@@ -717,13 +741,15 @@ def get_notes_by_id(client: AigonClient, unique_ids: List[str],
         context_before: Number of notes before each target to include
         context_after: Number of notes after each target to include
         with_signed_urls: Include share_signature for public URL generation
+        agent_filter: Filter by agent (e.g. 'mailbox') to find notes owned by that agent
     """
     try:
         notes = client.get_notes_by_ids(unique_ids,
                                         context_before=context_before,
                                         context_after=context_after,
                                         with_attachments=True,
-                                        with_share_signature=with_signed_urls)
+                                        with_share_signature=with_signed_urls,
+                                        agent_filter=agent_filter)
 
         if not notes:
             print("No notes found")
@@ -739,7 +765,7 @@ def get_notes_by_id(client: AigonClient, unique_ids: List[str],
 
         # Check if download mode or stdout mode
         if download_directory is not None:
-            _save_notes_to_files(notes, download_directory, clear_directory)
+            _save_notes_to_files(notes, download_directory, clear_directory, client=client)
         else:
             if output_format == "json":
                 # Sanitize notes before outputting
@@ -761,6 +787,73 @@ def get_notes_by_id(client: AigonClient, unique_ids: List[str],
 
     except Exception as e:
         print(f"Error getting notes by ID: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def mailbox_reply(client: AigonClient, unique_id: str, text: str,
+                  as_markdown: bool = False, delay: int = 5,
+                  bcc: list = None) -> None:
+    """Reply to a received email.
+
+    Args:
+        client: Authenticated Aigon client
+        unique_id: Unique ID (or prefix) of the note to reply to
+        text: Reply text
+        as_markdown: If True, send text as markdown
+        delay: Delay in minutes before sending (0 = immediate)
+        bcc: Optional BCC recipients
+    """
+    try:
+        kwargs = {'unique_id': unique_id, 'delay': delay}
+        if as_markdown:
+            kwargs['markdown'] = text
+        else:
+            kwargs['text'] = text
+        if bcc:
+            kwargs['bcc'] = bcc
+
+        result = client.mailbox_reply(**kwargs)
+        print(f"Reply sent to {result.get('to', '?')} (subject: {result.get('subject', '?')})")
+        print(f"  message_id: {result.get('message_id', '?')}")
+        print(f"  from: {result.get('from', '?')}")
+        if result.get('send_at'):
+            print(f"  scheduled: {result['send_at']}")
+    except Exception as e:
+        print(f"Error sending reply: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def mailbox_send(client: AigonClient, to: str, subject: str, text: str,
+                 as_markdown: bool = False, delay: int = 5,
+                 bcc: list = None) -> None:
+    """Send a new email.
+
+    Args:
+        client: Authenticated Aigon client
+        to: Recipient email address
+        subject: Email subject
+        text: Email body
+        as_markdown: If True, send text as markdown
+        delay: Delay in minutes before sending (0 = immediate)
+        bcc: Optional BCC recipients
+    """
+    try:
+        kwargs = {'to': to, 'subject': subject, 'delay': delay}
+        if as_markdown:
+            kwargs['markdown'] = text
+        else:
+            kwargs['text'] = text
+        if bcc:
+            kwargs['bcc'] = bcc
+
+        result = client.mailbox_send(**kwargs)
+        print(f"Email sent to {to} (subject: {subject})")
+        print(f"  message_id: {result.get('message_id', '?')}")
+        print(f"  from: {result.get('from', '?')}")
+        if result.get('send_at'):
+            print(f"  scheduled: {result['send_at']}")
+    except Exception as e:
+        print(f"Error sending email: {e}", file=sys.stderr)
         sys.exit(1)
 
 
@@ -1054,7 +1147,7 @@ def register_notetaker_commands(subparsers):
     search_parser.add_argument('--format', choices=['json', 'llm', 'snippet', 'summary', 'full'], default=None,
                             help='Output format: llm (default), json, snippet, summary, full (raw API response with match scores)')
     search_parser.add_argument('--download', nargs='?', const='_notes', default=None,
-                            help='Download notes to files. Optionally specify directory (default: _notes)')
+                            help='Download notes (with attachments, excluding voice) to files. Optionally specify directory (default: _notes)')
     search_parser.add_argument('--clear', action='store_true',
                             help='Clear directory before downloading notes (requires --download)')
 
@@ -1174,7 +1267,7 @@ def register_notetaker_commands(subparsers):
     read_parser.add_argument('--format', choices=['json', 'llm', 'snippet', 'summary'], default=None,
                             help='Output format: llm (default), json, snippet (one-liner), summary (summary+len only)')
     read_parser.add_argument('--download', nargs='?', const='_notes', default=None,
-                            help='Download notes to files. Optionally specify directory (default: _notes)')
+                            help='Download notes (with attachments, excluding voice) to files. Optionally specify directory (default: _notes)')
     read_parser.add_argument('--clear', action='store_true',
                             help='Clear directory before downloading notes (requires --download)')
     read_parser.add_argument('--max-bytes', type=int, default=5000,
@@ -1324,6 +1417,27 @@ def register_notetaker_commands(subparsers):
     clear_parser = notetaker_subparsers.add_parser('clear', help='Clear local notes directory')
     clear_parser.add_argument('--directory', default='_notes',
                             help='Directory to clear (default: _notes)')
+
+    # Reply to email (mailbox only)
+    reply_parser = notetaker_subparsers.add_parser('reply', help='Reply to a received email (mailbox only)')
+    reply_parser.add_argument('unique_id', help='Unique ID of the note to reply to')
+    reply_parser.add_argument('text', help='Reply text')
+    reply_parser.add_argument('--markdown', action='store_true',
+                              help='Treat text as markdown (auto-generates HTML)')
+    reply_parser.add_argument('--delay', type=int, default=5,
+                              help='Delay in minutes before sending (default: 5). Use 0 for immediate.')
+    reply_parser.add_argument('--bcc', nargs='+', help='BCC recipients')
+
+    # Send new email (mailbox only)
+    send_parser = notetaker_subparsers.add_parser('send', help='Send a new email (mailbox only)')
+    send_parser.add_argument('to', help='Recipient email address')
+    send_parser.add_argument('text', help='Email body text')
+    send_parser.add_argument('--subject', default='', help='Email subject')
+    send_parser.add_argument('--markdown', action='store_true',
+                             help='Treat text as markdown (auto-generates HTML)')
+    send_parser.add_argument('--delay', type=int, default=5,
+                              help='Delay in minutes before sending (default: 5). Use 0 for immediate.')
+    send_parser.add_argument('--bcc', nargs='+', help='BCC recipients')
 
     # Help command
     help_parser = notetaker_subparsers.add_parser('help', help='Show Notetaker help information')
@@ -1504,7 +1618,8 @@ def handle_notetaker_command(args, client: AigonClient):
             get_notes_by_id(client, unique_ids=unique_ids, output_format=args.format,
                            download_directory=args.download, clear_directory=args.clear,
                            context_before=context_before, context_after=context_after,
-                           with_signed_urls=getattr(args, 'with_signed_urls', False))
+                           with_signed_urls=getattr(args, 'with_signed_urls', False),
+                           agent_filter=getattr(args, 'agent_filter', None))
         else:
             # Validate flag combinations
             if args.clear and args.download is None:
@@ -1687,6 +1802,16 @@ def handle_notetaker_command(args, client: AigonClient):
                    event=event,
                    visible_to_participants=visible_to_participants,
                    output_format=args.format)
+    elif args.notetaker_command == 'reply':
+        mailbox_reply(client, unique_id=args.unique_id, text=args.text,
+                      as_markdown=getattr(args, 'markdown', False),
+                      delay=getattr(args, 'delay', 5),
+                      bcc=getattr(args, 'bcc', None))
+    elif args.notetaker_command == 'send':
+        mailbox_send(client, to=args.to, subject=getattr(args, 'subject', ''),
+                     text=args.text, as_markdown=getattr(args, 'markdown', False),
+                     delay=getattr(args, 'delay', 5),
+                     bcc=getattr(args, 'bcc', None))
     elif args.notetaker_command == 'clear':
         clear_local(args.directory)
     elif args.notetaker_command == 'help':

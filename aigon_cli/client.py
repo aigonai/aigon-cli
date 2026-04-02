@@ -30,16 +30,13 @@ class AigonClient:
             base_url: Base URL of the REST API server
             api_token: User authentication token from auth bot
         """
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.api_token = api_token  # Store for error messages
 
         # Store headers for all requests
         self.headers = {}
         if api_token:
-            self.headers = {
-                'Authorization': f'Bearer {api_token}',
-                'Content-Type': 'application/json'
-            }
+            self.headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
 
         # Test connection on initialization
         try:
@@ -61,61 +58,69 @@ class AigonClient:
             Exception: With clear error message about authentication
         """
         if response.status_code == 401:
-            raise Exception("\n❌ Authentication required - No API token provided!\n"
-                          "\nTo fix this:\n"
-                          "1. Get a token from @aigon_auth_bot on Telegram (https://t.me/aigon_auth_bot)\n"
-                          "2. Send the command: /get\n"
-                          "3. Copy the token and set the environment variable:\n"
-                          "   export AIGON_API_TOKEN=<your-token>\n"
-                          "\nThe AIGON_API_TOKEN environment variable is required for authentication.")
+            raise Exception(
+                "\n❌ Authentication required - No API token provided!\n"
+                "\nTo fix this:\n"
+                "1. Get a token from @aigon_auth_bot on Telegram (https://t.me/aigon_auth_bot)\n"
+                "2. Send the command: /get\n"
+                "3. Copy the token and set the environment variable:\n"
+                "   export AIGON_API_TOKEN=<your-token>\n"
+                "\nThe AIGON_API_TOKEN environment variable is required for authentication."
+            )
         elif response.status_code == 403:
             if not self.api_token:
-                raise Exception("\n❌ Access denied - No API token provided!\n"
-                              "\nTo fix this:\n"
-                              "1. Get a token from @aigon_auth_bot on Telegram (https://t.me/aigon_auth_bot)\n"
-                              "2. Send the command: /get\n"
-                              "3. Copy the token and set the environment variable:\n"
-                              "   export AIGON_API_TOKEN=<your-token>\n"
-                              "\nThe AIGON_API_TOKEN environment variable is required for authentication.")
+                raise Exception(
+                    "\n❌ Access denied - No API token provided!\n"
+                    "\nTo fix this:\n"
+                    "1. Get a token from @aigon_auth_bot on Telegram (https://t.me/aigon_auth_bot)\n"
+                    "2. Send the command: /get\n"
+                    "3. Copy the token and set the environment variable:\n"
+                    "   export AIGON_API_TOKEN=<your-token>\n"
+                    "\nThe AIGON_API_TOKEN environment variable is required for authentication."
+                )
             else:
-                raise Exception("\n❌ Access denied - Invalid or expired API token!\n"
-                              "\nYour current token may be invalid or expired.\n"
-                              "\nTo fix this:\n"
-                              "1. Get a new token from @aigon_auth_bot on Telegram (https://t.me/aigon_auth_bot)\n"
-                              "2. Send the command: /get\n"
-                              "3. Copy the new token and update the environment variable:\n"
-                              "   export AIGON_API_TOKEN=<your-new-token>\n"
-                              "\nMake sure the AIGON_API_TOKEN environment variable has the latest token.")
+                raise Exception(
+                    "\n❌ Access denied - Invalid or expired API token!\n"
+                    "\nYour current token may be invalid or expired.\n"
+                    "\nTo fix this:\n"
+                    "1. Get a new token from @aigon_auth_bot on Telegram (https://t.me/aigon_auth_bot)\n"
+                    "2. Send the command: /get\n"
+                    "3. Copy the new token and update the environment variable:\n"
+                    "   export AIGON_API_TOKEN=<your-new-token>\n"
+                    "\nMake sure the AIGON_API_TOKEN environment variable has the latest token."
+                )
 
-    def search_notes(self,
-                    query: str,
-                    content_type: str = None,
-                    limit: int = 10,
-                    scope: str = "all",
-                    time_window_start: Optional[float] = None,
-                    time_window_end: float = 0.0,
-                    start_ts: Optional[int] = None,
-                    end_ts: Optional[int] = None,
-                    time_field: Optional[str] = None,
-                    export_status: str = "all",
-                    processed_status: str = "all",
-                    deleted_status: str = "active",
-                    max_content_length: int = -1,
-                    note_type: str = "user",
-                    reverse: bool = False,
-                    agent_filter: Optional[str] = None,
-                    show_delegated: bool = True,
-                    with_attachments: bool = False,
-                    strategy: str = "hybrid",
-                    mode: str = "websearch",
-                    similarity_threshold: float = 0.3,
-                    order_by: str = "relevance",
-                    order_dir: str = "desc",
-                    offset: int = 0,
-                    file_type: Optional[str] = None,
-                    mime_type: Optional[str] = None,
-                    tags: Optional[str] = None,
-                    exclude_tags: Optional[str] = None) -> List[Dict[str, Any]]:
+    def search_notes(
+        self,
+        query: str,
+        content_type: str = None,
+        limit: int = 10,
+        scope: str = "all",
+        time_window_start: Optional[float] = None,
+        time_window_end: float = 0.0,
+        start_ts: Optional[int] = None,
+        end_ts: Optional[int] = None,
+        time_field: Optional[str] = None,
+        export_status: str = "all",
+        processed_status: str = "all",
+        deleted_status: str = "active",
+        max_content_length: int = -1,
+        note_type: str = "user",
+        reverse: bool = False,
+        agent_filter: Optional[str] = None,
+        show_delegated: bool = True,
+        with_attachments: bool = False,
+        strategy: str = "hybrid",
+        mode: str = "websearch",
+        similarity_threshold: float = 0.3,
+        order_by: str = "relevance",
+        order_dir: str = "desc",
+        offset: int = 0,
+        file_type: Optional[str] = None,
+        mime_type: Optional[str] = None,
+        tags: Optional[str] = None,
+        exclude_tags: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """Search through notetaker notes with comprehensive filtering.
 
         Args:
@@ -143,53 +148,53 @@ class AigonClient:
             List of matching notes
         """
         params = {
-            'query': query,
-            'format': 'full',  # Always request full format to get content
-            'limit': limit,
-            'scope': scope,
-            'time_window_end': time_window_end,
-            'export_status': export_status,
-            'processed_status': processed_status,
-            'deleted_status': deleted_status,
-            'max_content_length': max_content_length,
-            'note_type': note_type,
-            'reverse': reverse,
-            'show_delegated': show_delegated,
-            'with_attachments': with_attachments,
-            'strategy': strategy,
-            'mode': mode,
-            'similarity_threshold': similarity_threshold,
-            'order_by': order_by,
-            'order_dir': order_dir,
-            'offset': offset,
+            "query": query,
+            "format": "full",  # Always request full format to get content
+            "limit": limit,
+            "scope": scope,
+            "time_window_end": time_window_end,
+            "export_status": export_status,
+            "processed_status": processed_status,
+            "deleted_status": deleted_status,
+            "max_content_length": max_content_length,
+            "note_type": note_type,
+            "reverse": reverse,
+            "show_delegated": show_delegated,
+            "with_attachments": with_attachments,
+            "strategy": strategy,
+            "mode": mode,
+            "similarity_threshold": similarity_threshold,
+            "order_by": order_by,
+            "order_dir": order_dir,
+            "offset": offset,
         }
 
         if file_type:
-            params['file_type'] = file_type
+            params["file_type"] = file_type
         if mime_type:
-            params['mime_type'] = mime_type
+            params["mime_type"] = mime_type
         if tags:
-            params['tags'] = tags
+            params["tags"] = tags
         if exclude_tags:
-            params['exclude_tags'] = exclude_tags
+            params["exclude_tags"] = exclude_tags
 
         if content_type:
-            params['content_type'] = content_type
+            params["content_type"] = content_type
 
         if time_window_start is not None:
-            params['time_window_start'] = time_window_start
+            params["time_window_start"] = time_window_start
 
         if start_ts is not None:
-            params['start_ts'] = start_ts
+            params["start_ts"] = start_ts
 
         if end_ts is not None:
-            params['end_ts'] = end_ts
+            params["end_ts"] = end_ts
 
         if time_field is not None:
-            params['time_field'] = time_field
+            params["time_field"] = time_field
 
         if agent_filter is not None:
-            params['agent_filter'] = agent_filter
+            params["agent_filter"] = agent_filter
 
         response = requests.get(f"{self.base_url}/notetaker/search", headers=self.headers, params=params)
         if response.status_code in [401, 403]:
@@ -197,28 +202,30 @@ class AigonClient:
         response.raise_for_status()
         data = response.json()
         # API returns {"results": [...], "total": ...} - extract results list
-        return data.get('results', []) if isinstance(data, dict) else data
+        return data.get("results", []) if isinstance(data, dict) else data
 
-    def global_search(self,
-                     query: str,
-                     scope: str = "all",
-                     grouping: str = "merged",
-                     note_type: str = "all",
-                     file_versions: str = "latest",
-                     time_window_start: Optional[float] = None,
-                     time_window_end: float = 0.0,
-                     start_ts: Optional[int] = None,
-                     end_ts: Optional[int] = None,
-                     time_field: str = "created",
-                     export_status: str = "all",
-                     processed_status: str = "all",
-                     deleted_status: str = "active",
-                     agent: Optional[str] = None,
-                     include_delegated: bool = True,
-                     limit: int = 50,
-                     offset: int = 0,
-                     order_by: str = "relevance",
-                     order_dir: str = "desc") -> Dict[str, Any]:
+    def global_search(
+        self,
+        query: str,
+        scope: str = "all",
+        grouping: str = "merged",
+        note_type: str = "all",
+        file_versions: str = "latest",
+        time_window_start: Optional[float] = None,
+        time_window_end: float = 0.0,
+        start_ts: Optional[int] = None,
+        end_ts: Optional[int] = None,
+        time_field: str = "created",
+        export_status: str = "all",
+        processed_status: str = "all",
+        deleted_status: str = "active",
+        agent: Optional[str] = None,
+        include_delegated: bool = True,
+        limit: int = 50,
+        offset: int = 0,
+        order_by: str = "relevance",
+        order_dir: str = "desc",
+    ) -> Dict[str, Any]:
         """Global search across notes, attachments, and files.
 
         Args:
@@ -246,34 +253,34 @@ class AigonClient:
             Search results with grouping depending on 'grouping' parameter
         """
         params = {
-            'q': query,
-            'scope': scope,
-            'grouping': grouping,
-            'note_type': note_type,
-            'file_versions': file_versions,
-            'time_window_end': time_window_end,
-            'time_field': time_field,
-            'export_status': export_status,
-            'processed_status': processed_status,
-            'deleted_status': deleted_status,
-            'include_delegated': include_delegated,
-            'limit': limit,
-            'offset': offset,
-            'order_by': order_by,
-            'order_dir': order_dir
+            "q": query,
+            "scope": scope,
+            "grouping": grouping,
+            "note_type": note_type,
+            "file_versions": file_versions,
+            "time_window_end": time_window_end,
+            "time_field": time_field,
+            "export_status": export_status,
+            "processed_status": processed_status,
+            "deleted_status": deleted_status,
+            "include_delegated": include_delegated,
+            "limit": limit,
+            "offset": offset,
+            "order_by": order_by,
+            "order_dir": order_dir,
         }
 
         if time_window_start is not None:
-            params['time_window_start'] = time_window_start
+            params["time_window_start"] = time_window_start
 
         if start_ts is not None:
-            params['start_ts'] = start_ts
+            params["start_ts"] = start_ts
 
         if end_ts is not None:
-            params['end_ts'] = end_ts
+            params["end_ts"] = end_ts
 
         if agent is not None:
-            params['agent'] = agent
+            params["agent"] = agent
 
         response = requests.get(f"{self.base_url}/search", headers=self.headers, params=params)
         if response.status_code in [401, 403]:
@@ -281,19 +288,23 @@ class AigonClient:
         response.raise_for_status()
         return response.json()
 
-    def get_recent_notes(self, limit: int = 10, max_bytes: int = -1,
-                         processed_status: str = 'unprocessed',
-                         note_type: str = 'user',
-                         time_window_start: Optional[float] = 1.0,
-                         time_window_end: float = 0.0,
-                         start_ts: Optional[int] = None,
-                         end_ts: Optional[int] = None,
-                         time_field: Optional[str] = None,
-                         reverse: bool = False,
-                         agent_filter: Optional[str] = None,
-                         show_delegated: bool = True,
-                         with_attachments: bool = False,
-                         event: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_recent_notes(
+        self,
+        limit: int = 10,
+        max_bytes: int = -1,
+        processed_status: str = "unprocessed",
+        note_type: str = "user",
+        time_window_start: Optional[float] = 1.0,
+        time_window_end: float = 0.0,
+        start_ts: Optional[int] = None,
+        end_ts: Optional[int] = None,
+        time_field: Optional[str] = None,
+        reverse: bool = False,
+        agent_filter: Optional[str] = None,
+        show_delegated: bool = True,
+        with_attachments: bool = False,
+        event: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """Get recent notes from notetaker (filtered retrieval with defaults).
 
         Defaults: last 1 day, unprocessed notes only, all export statuses, user notes only.
@@ -322,36 +333,36 @@ class AigonClient:
         """
         # Use POST /notetaker/notes with filter parameters (no unique_ids)
         body = {
-            'limit': limit,
-            'processed_status': processed_status,
-            'note_type': note_type,
-            'time_window_start': time_window_start,  # None = all time (sent as null)
-            'time_window_end': time_window_end,
-            'reverse': reverse,
-            'show_delegated': show_delegated,
-            'with_attachments': with_attachments
+            "limit": limit,
+            "processed_status": processed_status,
+            "note_type": note_type,
+            "time_window_start": time_window_start,  # None = all time (sent as null)
+            "time_window_end": time_window_end,
+            "reverse": reverse,
+            "show_delegated": show_delegated,
+            "with_attachments": with_attachments,
         }
 
         # Add max_bytes if specified
         if max_bytes > 0:
-            body['max_bytes'] = max_bytes
+            body["max_bytes"] = max_bytes
 
         # Add absolute timestamps if specified
         if start_ts is not None:
-            body['start_ts'] = start_ts
+            body["start_ts"] = start_ts
 
         if end_ts is not None:
-            body['end_ts'] = end_ts
+            body["end_ts"] = end_ts
 
         if time_field is not None:
-            body['time_field'] = time_field
+            body["time_field"] = time_field
 
         if agent_filter is not None:
-            body['agent_filter'] = agent_filter
+            body["agent_filter"] = agent_filter
 
         # Event mode: admin access to participant notes
         if event is not None:
-            body['event'] = event
+            body["event"] = event
 
         response = requests.post(f"{self.base_url}/notetaker/notes", headers=self.headers, json=body)
         if response.status_code in [401, 403]:
@@ -359,9 +370,7 @@ class AigonClient:
         response.raise_for_status()
         return response.json()
 
-    def get_note_by_id(self, unique_id: str,
-                       context_before: int = 0,
-                       context_after: int = 0) -> List[Dict[str, Any]]:
+    def get_note_by_id(self, unique_id: str, context_before: int = 0, context_after: int = 0) -> List[Dict[str, Any]]:
         """Get note(s) by unique_id (supports prefix matching, minimum 2 characters).
 
         Args:
@@ -374,22 +383,25 @@ class AigonClient:
         """
         params = {}
         if context_before > 0:
-            params['context_before'] = context_before
+            params["context_before"] = context_before
         if context_after > 0:
-            params['context_after'] = context_after
+            params["context_after"] = context_after
 
-        response = requests.get(f"{self.base_url}/notetaker/notes/{unique_id}",
-                               headers=self.headers, params=params)
+        response = requests.get(f"{self.base_url}/notetaker/notes/{unique_id}", headers=self.headers, params=params)
         if response.status_code in [401, 403]:
             self._handle_auth_error(response)
         response.raise_for_status()
         return response.json()
 
-    def get_notes_by_ids(self, unique_ids: List[str],
-                         context_before: int = 0,
-                         context_after: int = 0,
-                         with_attachments: bool = False,
-                         with_share_signature: bool = False) -> List[Dict[str, Any]]:
+    def get_notes_by_ids(
+        self,
+        unique_ids: List[str],
+        context_before: int = 0,
+        context_after: int = 0,
+        with_attachments: bool = False,
+        with_share_signature: bool = False,
+        agent_filter: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """Get notes by multiple unique_ids (supports prefix matching).
 
         Args:
@@ -398,17 +410,20 @@ class AigonClient:
             context_after: Number of notes after each target to include
             with_attachments: Include attachment metadata (default False for performance)
             with_share_signature: Include share_signature for public URL generation
+            agent_filter: Filter by agent (e.g. 'mailbox') to find notes owned by that agent
 
         Returns:
             List of matching notes (with context if requested)
         """
-        body = {'unique_ids': unique_ids, 'with_attachments': with_attachments}
+        body = {"unique_ids": unique_ids, "with_attachments": with_attachments}
         if context_before > 0:
-            body['context_before'] = context_before
+            body["context_before"] = context_before
         if context_after > 0:
-            body['context_after'] = context_after
+            body["context_after"] = context_after
         if with_share_signature:
-            body['with_share_signature'] = True
+            body["with_share_signature"] = True
+        if agent_filter is not None:
+            body["agent_filter"] = agent_filter
 
         response = requests.post(f"{self.base_url}/notetaker/notes", headers=self.headers, json=body)
         if response.status_code in [401, 403]:
@@ -416,8 +431,13 @@ class AigonClient:
         response.raise_for_status()
         return response.json()
 
-    def mark_notes(self, unique_ids: List[str], processed: Optional[bool] = None,
-                   exported: Optional[bool] = None, deleted: Optional[bool] = None) -> Dict[str, Any]:
+    def mark_notes(
+        self,
+        unique_ids: List[str],
+        processed: Optional[bool] = None,
+        exported: Optional[bool] = None,
+        deleted: Optional[bool] = None,
+    ) -> Dict[str, Any]:
         """Mark or unmark notes as processed, exported, and/or deleted.
 
         Args:
@@ -434,13 +454,13 @@ class AigonClient:
         if processed is None and exported is None and deleted is None:
             raise ValueError("At least one of 'processed', 'exported', or 'deleted' must be specified")
 
-        body = {'unique_ids': unique_ids}
+        body = {"unique_ids": unique_ids}
         if processed is not None:
-            body['processed'] = processed
+            body["processed"] = processed
         if exported is not None:
-            body['exported'] = exported
+            body["exported"] = exported
         if deleted is not None:
-            body['deleted'] = deleted
+            body["deleted"] = deleted
 
         response = requests.post(f"{self.base_url}/notetaker/notes/mark", headers=self.headers, json=body)
         if response.status_code in [401, 403]:
@@ -448,16 +468,19 @@ class AigonClient:
         response.raise_for_status()
         return response.json()
 
-    def update_notes(self, unique_ids: List[str],
-                     tags_set: Optional[List[str]] = None,
-                     tags_add: Optional[List[str]] = None,
-                     tags_remove: Optional[List[str]] = None,
-                     summary: Optional[str] = None,
-                     metadata_set: Optional[Dict[str, Any]] = None,
-                     metadata_merge: Optional[Dict[str, Any]] = None,
-                     metadata_remove_keys: Optional[List[str]] = None,
-                     delegates_add: Optional[List[str]] = None,
-                     delegates_remove: Optional[List[str]] = None) -> Dict[str, Any]:
+    def update_notes(
+        self,
+        unique_ids: List[str],
+        tags_set: Optional[List[str]] = None,
+        tags_add: Optional[List[str]] = None,
+        tags_remove: Optional[List[str]] = None,
+        summary: Optional[str] = None,
+        metadata_set: Optional[Dict[str, Any]] = None,
+        metadata_merge: Optional[Dict[str, Any]] = None,
+        metadata_remove_keys: Optional[List[str]] = None,
+        delegates_add: Optional[List[str]] = None,
+        delegates_remove: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
         """Bulk update note metadata: tags, summary, metadata, delegates.
 
         Args:
@@ -475,25 +498,25 @@ class AigonClient:
         Returns:
             Dictionary with update result (success, batch_size, operations)
         """
-        body: Dict[str, Any] = {'unique_ids': unique_ids}
+        body: Dict[str, Any] = {"unique_ids": unique_ids}
         if tags_set is not None:
-            body['tags_set'] = tags_set
+            body["tags_set"] = tags_set
         if tags_add is not None:
-            body['tags_add'] = tags_add
+            body["tags_add"] = tags_add
         if tags_remove is not None:
-            body['tags_remove'] = tags_remove
+            body["tags_remove"] = tags_remove
         if summary is not None:
-            body['summary'] = summary
+            body["summary"] = summary
         if metadata_set is not None:
-            body['metadata_set'] = metadata_set
+            body["metadata_set"] = metadata_set
         if metadata_merge is not None:
-            body['metadata_merge'] = metadata_merge
+            body["metadata_merge"] = metadata_merge
         if metadata_remove_keys is not None:
-            body['metadata_remove_keys'] = metadata_remove_keys
+            body["metadata_remove_keys"] = metadata_remove_keys
         if delegates_add is not None:
-            body['delegates_add'] = delegates_add
+            body["delegates_add"] = delegates_add
         if delegates_remove is not None:
-            body['delegates_remove'] = delegates_remove
+            body["delegates_remove"] = delegates_remove
 
         response = requests.patch(f"{self.base_url}/notetaker/notes", headers=self.headers, json=body)
         if response.status_code in [401, 403]:
@@ -501,10 +524,15 @@ class AigonClient:
         response.raise_for_status()
         return response.json()
 
-    def save_report(self, content: str, agent: Optional[str] = None,
-                    report_type: str = 'user', date: Optional[str] = None,
-                    event: Optional[str] = None,
-                    visible_to_participants: Optional[bool] = None) -> Dict[str, Any]:
+    def save_report(
+        self,
+        content: str,
+        agent: Optional[str] = None,
+        report_type: str = "user",
+        date: Optional[str] = None,
+        event: Optional[str] = None,
+        visible_to_participants: Optional[bool] = None,
+    ) -> Dict[str, Any]:
         """Save a user-provided report as a system note.
 
         Args:
@@ -518,15 +546,15 @@ class AigonClient:
         Returns:
             Dictionary with saved note info including unique_id
         """
-        body = {'content': content, 'report_type': report_type}
+        body = {"content": content, "report_type": report_type}
         if agent is not None:
-            body['agent'] = agent
+            body["agent"] = agent
         if date is not None:
-            body['date'] = date
+            body["date"] = date
         if event is not None:
-            body['event'] = event
+            body["event"] = event
         if visible_to_participants is not None:
-            body['visible_to_participants'] = visible_to_participants
+            body["visible_to_participants"] = visible_to_participants
 
         response = requests.post(f"{self.base_url}/notetaker/reports/save", headers=self.headers, json=body)
         if response.status_code in [401, 403]:
@@ -549,18 +577,22 @@ class AigonClient:
         response.raise_for_status()
         return response.content
 
-    def get_attachment_by_unique_id(self, unique_id: str) -> Tuple[bytes, str, str]:
+    def get_attachment_by_unique_id(self, unique_id: str, agent_filter: str = "*") -> Tuple[bytes, str, str]:
         """Get attachment content by unique_id (supports prefix matching).
 
         Args:
             unique_id: Attachment unique ID or prefix (minimum 2 characters)
+            agent_filter: Agent filter for access control. "*" = any agent (default),
+                specific name (e.g. "conference") = that agent only.
 
         Returns:
             Tuple of (content_bytes, mime_type, filename)
         """
+        params = {"agent": agent_filter} if agent_filter else {}
         response = requests.get(
-            f"{self.base_url}/notetaker/attachments/{unique_id}",
-            headers=self.headers
+            f"{self.base_url}/private/attachment/{unique_id}",
+            headers=self.headers,
+            params=params,
         )
         if response.status_code in [401, 403]:
             self._handle_auth_error(response)
@@ -568,17 +600,17 @@ class AigonClient:
 
         # Extract filename from Content-Disposition header
         # Handles both filename="name" and filename*=UTF-8''name (RFC 5987)
-        content_disp = response.headers.get('Content-Disposition', '')
-        filename = 'attachment'
-        if 'filename*=' in content_disp:
+        content_disp = response.headers.get("Content-Disposition", "")
+        filename = "attachment"
+        if "filename*=" in content_disp:
             # Prefer RFC 5987 encoded filename (filename*=UTF-8''actual_name.ext)
             part = content_disp.split("filename*=")[1].split(";")[0].strip()
             if "''" in part:
                 filename = part.split("''", 1)[1]
-        elif 'filename=' in content_disp:
-            filename = content_disp.split('filename=')[1].split(";")[0].strip('"')
+        elif "filename=" in content_disp:
+            filename = content_disp.split("filename=")[1].split(";")[0].strip('"')
 
-        mime_type = response.headers.get('Content-Type', 'application/octet-stream')
+        mime_type = response.headers.get("Content-Type", "application/octet-stream")
 
         return response.content, mime_type, filename
 
@@ -595,21 +627,18 @@ class AigonClient:
         Returns:
             Tuple of (content_bytes, mime_type, filename)
         """
-        response = requests.get(
-            f"{self.base_url}/download/{unique_id}",
-            headers=self.headers
-        )
+        response = requests.get(f"{self.base_url}/download/{unique_id}", headers=self.headers)
         if response.status_code in [401, 403]:
             self._handle_auth_error(response)
         response.raise_for_status()
 
         # Extract filename from Content-Disposition header
-        content_disp = response.headers.get('Content-Disposition', '')
-        filename = 'download'
-        if 'filename=' in content_disp:
-            filename = content_disp.split('filename=')[1].strip('"')
+        content_disp = response.headers.get("Content-Disposition", "")
+        filename = "download"
+        if "filename=" in content_disp:
+            filename = content_disp.split("filename=")[1].strip('"')
 
-        mime_type = response.headers.get('Content-Type', 'application/octet-stream')
+        mime_type = response.headers.get("Content-Type", "application/octet-stream")
 
         return response.content, mime_type, filename
 
@@ -622,10 +651,12 @@ class AigonClient:
         Returns:
             Dictionary with file listing
         """
-        params = {'system': system}
+        params = {"system": system}
         response = requests.get(f"{self.base_url}/filedb/files", headers=self.headers, params=params)
         if response.status_code == 404:
-            raise Exception("Endpoint not found: GET /filedb/files - FileDB endpoints may not be registered on the server")
+            raise Exception(
+                "Endpoint not found: GET /filedb/files - FileDB endpoints may not be registered on the server"
+            )
         elif response.status_code in [401, 403]:
             self._handle_auth_error(response)
         response.raise_for_status()
@@ -642,9 +673,9 @@ class AigonClient:
         Returns:
             Dictionary with file content and metadata
         """
-        params = {'system': system}
+        params = {"system": system}
         if version is not None:
-            params['version'] = version
+            params["version"] = version
 
         response = requests.get(f"{self.base_url}/filedb/files/{basename}", headers=self.headers, params=params)
         if response.status_code in [401, 403]:
@@ -652,8 +683,14 @@ class AigonClient:
         response.raise_for_status()
         return response.json()
 
-    def write_file(self, basename: str, content: str, system: bool = False,
-                   reshare: bool = False, share_with: Optional[List[int]] = None) -> Dict[str, Any]:
+    def write_file(
+        self,
+        basename: str,
+        content: str,
+        system: bool = False,
+        reshare: bool = False,
+        share_with: Optional[List[int]] = None,
+    ) -> Dict[str, Any]:
         """Write content to a file in filedb.
 
         Args:
@@ -666,32 +703,26 @@ class AigonClient:
         Returns:
             Dictionary with operation result and file metadata
         """
-        data = {
-            'content': content,
-            'system': system
-        }
+        data = {"content": content, "system": system}
         if reshare:
-            data['reshare'] = True
+            data["reshare"] = True
         if share_with:
-            data['share_with'] = share_with
+            data["share_with"] = share_with
 
-        response = requests.put(
-            f"{self.base_url}/filedb/files/{basename}",
-            headers=self.headers,
-            json=data
-        )
+        response = requests.put(f"{self.base_url}/filedb/files/{basename}", headers=self.headers, json=data)
         if response.status_code in [401, 403]:
             self._handle_auth_error(response)
         elif response.status_code == 400:
             # Handle specific case where file doesn't exist
             try:
                 error_data = response.json()
-                error_msg = error_data.get('detail', 'Bad Request')
-                if 'not found' in error_msg.lower() or 'does not exist' in error_msg.lower():
+                error_msg = error_data.get("detail", "Bad Request")
+                if "not found" in error_msg.lower() or "does not exist" in error_msg.lower():
                     namespace = "system" if system else "user"
-                    raise Exception(f"File '{basename}' does not exist in {namespace} namespace. "
-                                  f"Create it first with: aigon filedb create {basename}" +
-                                  (" --sys" if system else ""))
+                    raise Exception(
+                        f"File '{basename}' does not exist in {namespace} namespace. "
+                        f"Create it first with: aigon filedb create {basename}" + (" --sys" if system else "")
+                    )
                 else:
                     raise Exception(f"Bad Request: {error_msg}")
             except ValueError:
@@ -710,10 +741,9 @@ class AigonClient:
         Returns:
             Dictionary with operation result and file metadata
         """
-        params = {'system': system}
+        params = {"system": system}
 
-        response = requests.post(f"{self.base_url}/filedb/files/{basename}/create",
-                                headers=self.headers, params=params)
+        response = requests.post(f"{self.base_url}/filedb/files/{basename}/create", headers=self.headers, params=params)
         if response.status_code in [401, 403]:
             self._handle_auth_error(response)
         response.raise_for_status()
@@ -729,10 +759,9 @@ class AigonClient:
         Returns:
             Dictionary with operation result
         """
-        params = {'system': system}
+        params = {"system": system}
 
-        response = requests.delete(f"{self.base_url}/filedb/files/{basename}",
-                                  headers=self.headers, params=params)
+        response = requests.delete(f"{self.base_url}/filedb/files/{basename}", headers=self.headers, params=params)
         if response.status_code in [401, 403]:
             self._handle_auth_error(response)
         response.raise_for_status()
@@ -750,10 +779,11 @@ class AigonClient:
         Returns:
             Dictionary with operation result
         """
-        params = {'system': system}
+        params = {"system": system}
 
-        response = requests.post(f"{self.base_url}/filedb/files/{basename}/archive",
-                                headers=self.headers, params=params)
+        response = requests.post(
+            f"{self.base_url}/filedb/files/{basename}/archive", headers=self.headers, params=params
+        )
         if response.status_code in [401, 403]:
             self._handle_auth_error(response)
         response.raise_for_status()
@@ -769,25 +799,28 @@ class AigonClient:
         Returns:
             Dictionary with operation result
         """
-        params = {'system': system}
+        params = {"system": system}
 
-        response = requests.post(f"{self.base_url}/filedb/files/{basename}/unarchive",
-                                headers=self.headers, params=params)
+        response = requests.post(
+            f"{self.base_url}/filedb/files/{basename}/unarchive", headers=self.headers, params=params
+        )
         if response.status_code in [401, 403]:
             self._handle_auth_error(response)
         response.raise_for_status()
         return response.json()
 
-    def search_files(self,
-                    query: str,
-                    filename: Optional[str] = None,
-                    include_current: bool = True,
-                    include_archived: bool = False,
-                    include_deleted: bool = False,
-                    include_all_versions: bool = False,
-                    limit: int = 10,
-                    max_content_length: int = -1,
-                    system: bool = False) -> Dict[str, Any]:
+    def search_files(
+        self,
+        query: str,
+        filename: Optional[str] = None,
+        include_current: bool = True,
+        include_archived: bool = False,
+        include_deleted: bool = False,
+        include_all_versions: bool = False,
+        limit: int = 10,
+        max_content_length: int = -1,
+        system: bool = False,
+    ) -> Dict[str, Any]:
         """Search through FileDB files by content and/or filename with flexible constraints.
 
         Args:
@@ -805,19 +838,19 @@ class AigonClient:
             Dictionary with search results and metadata
         """
         params = {
-            'query': query,
-            'include_current': include_current,
-            'include_archived': include_archived,
-            'include_deleted': include_deleted,
-            'include_all_versions': include_all_versions,
-            'limit': limit,
-            'max_content_length': max_content_length,
-            'system': system
+            "query": query,
+            "include_current": include_current,
+            "include_archived": include_archived,
+            "include_deleted": include_deleted,
+            "include_all_versions": include_all_versions,
+            "limit": limit,
+            "max_content_length": max_content_length,
+            "system": system,
         }
 
         # Add filename parameter only if provided
         if filename is not None:
-            params['filename'] = filename
+            params["filename"] = filename
 
         response = requests.get(f"{self.base_url}/filedb/search", headers=self.headers, params=params)
         if response.status_code in [401, 403]:
@@ -825,8 +858,9 @@ class AigonClient:
         response.raise_for_status()
         return response.json()
 
-    def share_file(self, basename: str, user_ids: List[int],
-                   version: int = None, system: bool = False) -> Dict[str, Any]:
+    def share_file(
+        self, basename: str, user_ids: List[int], version: int = None, system: bool = False
+    ) -> Dict[str, Any]:
         """Share file with users.
 
         Args:
@@ -838,18 +872,11 @@ class AigonClient:
         Returns:
             Dictionary with operation result
         """
-        data = {
-            'user_ids': user_ids,
-            'system': system
-        }
+        data = {"user_ids": user_ids, "system": system}
         if version is not None:
-            data['version'] = version
+            data["version"] = version
 
-        response = requests.post(
-            f"{self.base_url}/filedb/files/{basename}/share",
-            headers=self.headers,
-            json=data
-        )
+        response = requests.post(f"{self.base_url}/filedb/files/{basename}/share", headers=self.headers, json=data)
         if response.status_code in [401, 403]:
             self._handle_auth_error(response)
         response.raise_for_status()
@@ -865,13 +892,9 @@ class AigonClient:
         Returns:
             Dictionary with operation result
         """
-        data = {'system': system}
+        data = {"system": system}
 
-        response = requests.post(
-            f"{self.base_url}/filedb/files/{basename}/unshare",
-            headers=self.headers,
-            json=data
-        )
+        response = requests.post(f"{self.base_url}/filedb/files/{basename}/unshare", headers=self.headers, json=data)
         if response.status_code in [401, 403]:
             self._handle_auth_error(response)
         response.raise_for_status()
@@ -898,7 +921,7 @@ class AigonClient:
         Returns:
             Dictionary with list of shared files and details
         """
-        params = {'system': system}
+        params = {"system": system}
         response = requests.get(f"{self.base_url}/filedb/sharing", headers=self.headers, params=params)
         if response.status_code in [401, 403]:
             self._handle_auth_error(response)
@@ -941,6 +964,80 @@ class AigonClient:
         response.raise_for_status()
         return response.json()
 
+    # =========================================================================
+    # Mailbox (send/reply)
+    # =========================================================================
+
+    def mailbox_send(
+        self,
+        to: str,
+        subject: str,
+        text: Optional[str] = None,
+        markdown: Optional[str] = None,
+        delay: int = 5,
+        bcc: Optional[list] = None,
+    ) -> Dict[str, Any]:
+        """Send a new email from the user's mailbox.
+
+        Args:
+            to: Recipient email address
+            subject: Email subject
+            text: Plain text body
+            markdown: Markdown body (auto-generates text and html)
+            delay: Delay in minutes before sending (default: 5). Use 0 for immediate.
+            bcc: Optional BCC recipients
+
+        Returns:
+            Dictionary with send result (success, message_id, thread_id, from)
+        """
+        body = {"to": to, "subject": subject, "delay": delay}
+        if text:
+            body["text"] = text
+        if markdown:
+            body["markdown"] = markdown
+        if bcc:
+            body["bcc"] = bcc
+
+        response = requests.post(f"{self.base_url}/mailbox/send", headers=self.headers, json=body)
+        if response.status_code in [401, 403]:
+            self._handle_auth_error(response)
+        response.raise_for_status()
+        return response.json()
+
+    def mailbox_reply(
+        self,
+        unique_id: str,
+        text: Optional[str] = None,
+        markdown: Optional[str] = None,
+        delay: int = 5,
+        bcc: Optional[list] = None,
+    ) -> Dict[str, Any]:
+        """Reply to a received email by note unique_id.
+
+        Args:
+            unique_id: Unique ID (or prefix) of the note to reply to
+            text: Plain text reply body
+            markdown: Markdown reply body (auto-generates text and html)
+            delay: Delay in minutes before sending (default: 5). Use 0 for immediate.
+            bcc: Optional BCC recipients
+
+        Returns:
+            Dictionary with send result (success, message_id, thread_id, from, to, subject)
+        """
+        body = {"unique_id": unique_id, "delay": delay}
+        if text:
+            body["text"] = text
+        if markdown:
+            body["markdown"] = markdown
+        if bcc:
+            body["bcc"] = bcc
+
+        response = requests.post(f"{self.base_url}/mailbox/reply", headers=self.headers, json=body)
+        if response.status_code in [401, 403]:
+            self._handle_auth_error(response)
+        response.raise_for_status()
+        return response.json()
+
 
 def main():
     """Example usage of the Agent01 client."""
@@ -968,7 +1065,7 @@ def main():
 
         print("\n=== Available Endpoints ===")
         endpoints = client.list_endpoints()
-        for endpoint in endpoints.get('endpoints', []):
+        for endpoint in endpoints.get("endpoints", []):
             print(f"{endpoint['method']} {endpoint['path']} - {endpoint.get('description', 'No description')}")
 
         print("\n=== Recent Notes ===")
@@ -995,7 +1092,7 @@ def main():
         # Read the file back
         print("Reading test file...")
         file_content = client.read_file("test-api")
-        if file_content.get('success'):
+        if file_content.get("success"):
             print(f"File content: {file_content.get('content', '')[:100]}...")
         else:
             print("Failed to read file")

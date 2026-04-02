@@ -59,9 +59,11 @@ def main():
     # aigon coach -> aigon notetaker read --agent coach (default to read)
 
     # Valid notetaker subcommands
-    NOTETAKER_SUBCOMMANDS = {'read', 'search', 'mark', 'delegate', 'update'}
+    NOTETAKER_SUBCOMMANDS = {'read', 'search', 'mark', 'delegate', 'update', 'reply', 'send'}
     # Subcommands that accept --agent filter
     AGENT_FILTER_SUBCOMMANDS = {'read', 'search'}
+    # Mailbox-only subcommands (no --agent rewrite, agent is implicit)
+    MAILBOX_ONLY_SUBCOMMANDS = {'reply', 'send'}
 
     if len(sys.argv) > 1:
         if sys.argv[1] in ('coach', 'wellness', 'walkthru', 'mailbox'):
@@ -89,8 +91,8 @@ def main():
         epilog=f'Version {__version__} ({__date__})'
     )
 
-    parser.add_argument('--version', action='version',
-                       version=f'aigon {__version__} ({__date__})')
+    parser.add_argument('--version', action='store_true',
+                       help='Show version information')
 
     parser.add_argument('--config-file',
                        help='Config file path (default: ~/.aigon or AIGON_CLI_CONFIG_FILE env var)')
@@ -135,6 +137,22 @@ def main():
     # Set config file path if specified (before any config access)
     if args.config_file:
         set_config_path(args.config_file)
+
+    if args.version:
+        print(f"aigon {__version__} ({__date__})")
+        api_url = args.url or get_api_url()
+        try:
+            from . import requests_shim as requests
+            resp = requests.get(f"{api_url}/health")
+            health = resp.json()
+            status = health.get('status', 'unknown')
+            version_str = f"restapi {health.get('version', '?')} @ {api_url}"
+            if status != 'healthy':
+                version_str += f" (STATUS: {status})"
+            print(version_str)
+        except Exception:
+            print(f"restapi UNREACHABLE @ {api_url}", file=sys.stderr)
+        sys.exit(0)
 
     if not args.command:
         parser.print_help()

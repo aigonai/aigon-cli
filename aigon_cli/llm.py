@@ -5,19 +5,33 @@ This module provides LLM-friendly help and command documentation.
 (c) Stefan LOESCH 2025-26. All rights reserved.
 """
 
+import argparse
 import sys
 
 
 def register_llm_commands(subparsers):
-    """Register LLM commands with argument parser.
+    """Register LLM help commands with argument parser.
+
+    Registers ``llmhelp`` as the primary subcommand and ``llm`` as a hidden
+    back-compat alias (old name). Both route to :func:`handle_llm_command`.
 
     Args:
         subparsers: Argument parser subparsers object
     """
-    llm_parser = subparsers.add_parser("llm", help="LLM-friendly command reference")
-    llm_parser.add_argument(
-        "topic", nargs="*", default=[], help="Topic: notes/notetaker, files/filedb, or omit for full reference"
+    llmhelp_parser = subparsers.add_parser("llmhelp", help="LLM-friendly command reference")
+    llmhelp_parser.add_argument(
+        "topic",
+        nargs="*",
+        default=[],
+        help="Topic: notes/notetaker, files/filedb, event, or a command path",
     )
+
+    # Hidden back-compat alias for the old `aigon llm ...` name.
+    # NOTE: we register a separate subparser rather than using
+    # ``aliases=["llm"]`` because argparse shows aliases in the help listing;
+    # we want this name hidden.
+    llm_alias_parser = subparsers.add_parser("llm", help=argparse.SUPPRESS)
+    llm_alias_parser.add_argument("topic", nargs="*", default=[])
 
 
 def handle_llm_command(args):
@@ -47,7 +61,7 @@ def handle_llm_command(args):
 def show_llm_help_notes():
     """Display concise notetaker help for LLMs."""
     help_text = """
-# Notetaker Commands (aigon llm notes)
+# Notetaker Commands (aigon llmhelp notes)
 
 ## Note References - IMPORTANT
 
@@ -100,7 +114,7 @@ Use --newest N: for recent recordings/notes
 def show_llm_help_files():
     """Display concise filedb help for LLMs."""
     help_text = """
-# FileDB Commands (aigon llm files)
+# FileDB Commands (aigon llmhelp files)
 
 FileDB stores versioned markdown files in the cloud.
 
@@ -129,7 +143,7 @@ FileDB stores versioned markdown files in the cloud.
 def show_llm_help_event():
     """Display concise event help for LLMs."""
     help_text = """
-# Event Commands (aigon llm event)
+# Event Commands (aigon llmhelp event)
 
 Event mode is for administering live events where participants submit notes.
 Uses local .aigon config file in current directory (not ~/.aigon).
@@ -243,9 +257,9 @@ Format: [xxxxxx] - 6 character ID in square brackets.
 
 ## Commands
 
-  aigon llm notes                         # Notetaker command reference
-  aigon llm files                         # FileDB command reference
-  aigon llm event                         # Event admin command reference
+  aigon llmhelp notes                     # Notetaker command reference
+  aigon llmhelp files                     # FileDB command reference
+  aigon llmhelp event                     # Event admin command reference
 
   aigon notetaker read                    # Read notes (oldest 10 unprocessed)
   aigon notetaker read abc123             # Read specific note by ID

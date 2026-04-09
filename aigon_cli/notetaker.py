@@ -1179,7 +1179,7 @@ def register_notetaker_commands(subparsers):
         subparsers: argparse subparsers object
     """
     # Notetaker command group
-    notetaker_parser = subparsers.add_parser("notetaker", help="Notetaker operations")
+    notetaker_parser = subparsers.add_parser("notetaker", aliases=["n"], help="Notetaker operations")
     notetaker_subparsers = notetaker_parser.add_subparsers(dest="notetaker_command", help="Notetaker commands")
 
     # Search command

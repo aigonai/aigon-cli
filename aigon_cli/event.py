@@ -19,9 +19,10 @@ from .tz import parse_time, parse_time_range
 
 # ===== Configuration Helpers =====
 
+
 def get_event_name() -> Optional[str]:
     """Get event name from config."""
-    return get_config_value('event', 'name')
+    return get_config_value("event", "name")
 
 
 def get_event_token() -> Optional[str]:
@@ -36,8 +37,8 @@ def get_event_token() -> Optional[str]:
     Returns:
         API token string or None
     """
-    event_token = get_config_value('event', 'token')
-    api_token = get_config_value('api', 'token')
+    event_token = get_config_value("event", "token")
+    api_token = get_config_value("api", "token")
 
     if event_token and api_token:
         print("Warning: Local config has both [event] token and [api] token", file=sys.stderr)
@@ -48,25 +49,25 @@ def get_event_token() -> Optional[str]:
 
 def get_test_users() -> List[int]:
     """Get test user IDs from config."""
-    value = get_config_value('event', 'test_users')
+    value = get_config_value("event", "test_users")
     if not value:
         return []
-    return [int(u.strip()) for u in value.split(',') if u.strip()]
+    return [int(u.strip()) for u in value.split(",") if u.strip()]
 
 
 def get_admin_users() -> List[int]:
     """Get admin user IDs from config."""
-    value = get_config_value('event', 'admin_users')
+    value = get_config_value("event", "admin_users")
     if not value:
         return []
-    return [int(u.strip()) for u in value.split(',') if u.strip()]
+    return [int(u.strip()) for u in value.split(",") if u.strip()]
 
 
 def parse_user_list(value: Optional[str]) -> List[int]:
     """Parse comma-separated user IDs string to list of ints."""
     if not value:
         return []
-    return [int(u.strip()) for u in value.split(',') if u.strip()]
+    return [int(u.strip()) for u in value.split(",") if u.strip()]
 
 
 def get_periods() -> Dict[str, tuple]:
@@ -78,46 +79,45 @@ def get_periods() -> Dict[str, tuple]:
     """
     config = load_config()
     periods = {}
-    if not config.has_section('event'):
+    if not config.has_section("event"):
         return periods
 
-    for option in config.options('event'):
-        if option.startswith('period.'):
+    for option in config.options("event"):
+        if option.startswith("period."):
             period_name = option[7:]  # Remove 'period.' prefix
-            value = config.get('event', option)
+            value = config.get("event", option)
             # Parse "HH:MM-HH:MM" format
-            if '-' in value:
-                start_time, end_time = value.split('-', 1)
+            if "-" in value:
+                start_time, end_time = value.split("-", 1)
                 periods[period_name] = (start_time.strip(), end_time.strip())
 
     return periods
 
 
-
-
 # ===== Note Formatting =====
+
 
 def _format_note_llm(note: dict) -> str:
     """Format a single note in LLM-friendly format for event mode.
 
     Always shows user_id_pk_int since this is event admin view.
     """
-    unique_id = note.get('unique_id', 'unknown')
+    unique_id = note.get("unique_id", "unknown")
     short_id = unique_id[:6] if len(unique_id) >= 6 else unique_id
-    content_type = note.get('content_type', 'text')
-    content = note.get('content', '')
-    user_id_pk_int = note.get('user_id_pk_int', 'unknown')
+    content_type = note.get("content_type", "text")
+    content = note.get("content", "")
+    user_id_pk_int = note.get("user_id_pk_int", "unknown")
 
     # Format created_at
-    created_at_ts = note.get('created_at')
+    created_at_ts = note.get("created_at")
     if created_at_ts:
         try:
             dt = datetime.fromtimestamp(int(created_at_ts), tz=timezone.utc)
-            created_at = dt.strftime('%a %Y-%m-%d %H:%M:%S UTC')
+            created_at = dt.strftime("%a %Y-%m-%d %H:%M:%S UTC")
         except (ValueError, TypeError):
-            created_at = 'unknown'
+            created_at = "unknown"
     else:
-        created_at = 'unknown'
+        created_at = "unknown"
 
     lines = [
         "--- BEGIN NOTE ---",
@@ -128,10 +128,10 @@ def _format_note_llm(note: dict) -> str:
         "content: ---",
         content,
         "---",
-        "--- END NOTE ---"
+        "--- END NOTE ---",
     ]
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 def _format_note_snippet(note: dict, max_content_chars: int = 80) -> str:
@@ -139,26 +139,26 @@ def _format_note_snippet(note: dict, max_content_chars: int = 80) -> str:
 
     Format: user_id | short_id | time | content_preview
     """
-    unique_id = note.get('unique_id', 'unknown')
+    unique_id = note.get("unique_id", "unknown")
     short_id = unique_id[:6] if len(unique_id) >= 6 else unique_id
-    user_id_pk_int = note.get('user_id_pk_int', '?')
+    user_id_pk_int = note.get("user_id_pk_int", "?")
 
     # Time (compact format)
-    created_at = note.get('created_at')
+    created_at = note.get("created_at")
     if created_at:
         try:
             dt = datetime.fromtimestamp(int(created_at), tz=timezone.utc)
-            time_str = dt.strftime('%H:%M')
+            time_str = dt.strftime("%H:%M")
         except (ValueError, TypeError):
-            time_str = '??:??'
+            time_str = "??:??"
     else:
-        time_str = '??:??'
+        time_str = "??:??"
 
     # Content preview
-    content = note.get('content', '')
-    content_preview = content.replace('\n', ' ').replace('\r', '')[:max_content_chars]
+    content = note.get("content", "")
+    content_preview = content.replace("\n", " ").replace("\r", "")[:max_content_chars]
     if len(content) > max_content_chars:
-        content_preview += '...'
+        content_preview += "..."
 
     return f"u{user_id_pk_int} | {short_id} | {time_str} | {content_preview}"
 
@@ -168,9 +168,17 @@ def _sanitize_note_for_output(note: dict) -> dict:
 
     Note: user_id_pk_int is kept for event mode since admins need to identify note owners.
     """
-    internal_fields = {'id', 'agent', 'att_id', 'att_unique_id', 'att_filename',
-                       'att_original_filename', 'att_file_type', 'att_mime_type',
-                       'att_content_size'}
+    internal_fields = {
+        "id",
+        "agent",
+        "att_id",
+        "att_unique_id",
+        "att_filename",
+        "att_original_filename",
+        "att_file_type",
+        "att_mime_type",
+        "att_content_size",
+    }
     return {k: v for k, v in note.items() if k not in internal_fields}
 
 
@@ -188,10 +196,13 @@ def _clear_directory(directory: str) -> None:
         print(f"Cleared {directory}/")
 
 
-def _save_event_notes_to_files(notes: List[dict], directory: str,
-                                clear_directory: bool = False,
-                                with_attachments: bool = True,
-                                client: Optional[AigonClient] = None) -> List[str]:
+def _save_event_notes_to_files(
+    notes: List[dict],
+    directory: str,
+    clear_directory: bool = False,
+    with_attachments: bool = True,
+    client: Optional[AigonClient] = None,
+) -> List[str]:
     """Save event notes as individual markdown files with optional attachments.
 
     Args:
@@ -220,11 +231,11 @@ def _save_event_notes_to_files(notes: List[dict], directory: str,
 
     for note in notes:
         # Generate filename from created_at timestamp
-        unique_id = note.get('unique_id', note.get('id', 'unknown'))
+        unique_id = note.get("unique_id", note.get("id", "unknown"))
         short_id = unique_id[:6] if len(unique_id) >= 6 else unique_id
-        content_type = note.get('content_type', 'text')
-        created_at = note.get('created_at')
-        user_id = note.get('user_id_pk_int', 'unknown')
+        content_type = note.get("content_type", "text")
+        created_at = note.get("created_at")
+        user_id = note.get("user_id_pk_int", "unknown")
 
         # Convert created_at to proper datetime format for filename
         try:
@@ -241,7 +252,7 @@ def _save_event_notes_to_files(notes: List[dict], directory: str,
         filepath = os.path.join(directory, filename)
 
         # Prepare content
-        content = note.get('content', note.get('processed_content', note.get('original_content', '')))
+        content = note.get("content", note.get("processed_content", note.get("original_content", "")))
 
         # Create metadata header with YAML frontmatter
         metadata = "---\n"
@@ -255,9 +266,9 @@ def _save_event_notes_to_files(notes: List[dict], directory: str,
                 created_ts = int(created_at)
                 dt_utc = datetime.fromtimestamp(created_ts, tz=timezone.utc)
                 dt_local = datetime.fromtimestamp(created_ts)
-                local_tz = dt_local.strftime('%Z') or time.tzname[0]
-                metadata += f"created_at: \"{dt_local.strftime('%Y-%m-%d %H:%M:%S')} {local_tz}\"\n"
-                metadata += f"created_at_utc: \"{dt_utc.strftime('%Y-%m-%dT%H:%M:%SZ')}\"\n"
+                local_tz = dt_local.strftime("%Z") or time.tzname[0]
+                metadata += f'created_at: "{dt_local.strftime("%Y-%m-%d %H:%M:%S")} {local_tz}"\n'
+                metadata += f'created_at_utc: "{dt_utc.strftime("%Y-%m-%dT%H:%M:%SZ")}"\n'
                 metadata += f"created_at_ts: {created_ts}\n"
             except (ValueError, TypeError):
                 metadata += f"created_at: {created_at}\n"
@@ -265,19 +276,19 @@ def _save_event_notes_to_files(notes: List[dict], directory: str,
             metadata += "created_at: unknown\n"
 
         # Add processed timestamp
-        processed_at = note.get('processed_at')
+        processed_at = note.get("processed_at")
         if processed_at:
             try:
                 processed_ts = int(processed_at)
                 processed_dt = datetime.fromtimestamp(processed_ts, tz=timezone.utc)
-                metadata += f"processed_at: \"{processed_dt.strftime('%Y-%m-%dT%H:%M:%SZ')}\"\n"
+                metadata += f'processed_at: "{processed_dt.strftime("%Y-%m-%dT%H:%M:%SZ")}"\n'
             except (ValueError, TypeError):
                 metadata += f"processed_at: {processed_at}\n"
 
         # Add attachment info if present
-        attachments = note.get('attachments', [])
+        attachments = note.get("attachments", [])
         if attachments:
-            att_names = [att.get('filename', 'unknown') for att in attachments]
+            att_names = [att.get("filename", "unknown") for att in attachments]
             metadata += f"attachments: {att_names}\n"
 
         metadata += "---\n\n"
@@ -286,15 +297,15 @@ def _save_event_notes_to_files(notes: List[dict], directory: str,
         full_content = metadata + content
 
         # Write note file
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(full_content)
         saved_files.append(filepath)
 
         # Download attachments if requested (skip voice recordings)
-        if with_attachments and attachments and client and content_type != 'voice':
+        if with_attachments and attachments and client and content_type != "voice":
             for att in attachments:
-                att_unique_id = att.get('unique_id')
-                att_filename = att.get('filename')
+                att_unique_id = att.get("unique_id")
+                att_filename = att.get("filename")
                 if not att_unique_id or not att_filename:
                     continue
                 try:
@@ -306,7 +317,7 @@ def _save_event_notes_to_files(notes: List[dict], directory: str,
                     att_save_name = f"{date_prefix}_u{user_id}_{short_id}_{att_filename}"
                     att_filepath = os.path.join(directory, att_save_name)
 
-                    with open(att_filepath, 'wb') as f:
+                    with open(att_filepath, "wb") as f:
                         f.write(att_content)
                     saved_files.append(att_filepath)
                     attachment_count += 1
@@ -328,22 +339,26 @@ def _save_event_notes_to_files(notes: List[dict], directory: str,
 
 # ===== Commands =====
 
-def event_read(client: AigonClient, event_name: str,
-               limit: int = 50,
-               output_format: str = 'llm',
-               time_range: Optional[str] = None,
-               start_time: Optional[str] = None,
-               end_time: Optional[str] = None,
-               period: Optional[str] = None,
-               date: Optional[str] = None,
-               test_users: Optional[List[int]] = None,
-               newest: bool = False,
-               processed_status: str = 'unprocessed',
-               test_only: bool = False,
-               filter_users: Optional[List[int]] = None,
-               download_directory: Optional[str] = None,
-               clear_directory: bool = False,
-               with_attachments: bool = True) -> None:
+
+def event_read(
+    client: AigonClient,
+    event_name: str,
+    limit: int = 50,
+    output_format: str = "llm",
+    time_range: Optional[str] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    period: Optional[str] = None,
+    date: Optional[str] = None,
+    test_users: Optional[List[int]] = None,
+    newest: bool = False,
+    processed_status: str = "unprocessed",
+    test_only: bool = False,
+    filter_users: Optional[List[int]] = None,
+    download_directory: Optional[str] = None,
+    clear_directory: bool = False,
+    with_attachments: bool = True,
+) -> None:
     """Read event participant notes.
 
     Args:
@@ -403,34 +418,35 @@ def event_read(client: AigonClient, event_name: str,
             limit=limit,
             max_bytes=-1,  # Never truncate
             processed_status=processed_status,
-            note_type='user',
+            note_type="user",
             time_window_start=None,  # Use absolute timestamps
             start_ts=start_ts,
             end_ts=end_ts,
             reverse=newest,
-            event=event_name
+            event=event_name,
         )
 
         # Filter test users
         if test_users:
             if test_only:
-                result = [n for n in result if n.get('user_id_pk_int') in test_users]
+                result = [n for n in result if n.get("user_id_pk_int") in test_users]
             else:
-                result = [n for n in result if n.get('user_id_pk_int') not in test_users]
+                result = [n for n in result if n.get("user_id_pk_int") not in test_users]
 
         # Filter to specific users if requested
         if filter_users:
-            result = [n for n in result if n.get('user_id_pk_int') in filter_users]
+            result = [n for n in result if n.get("user_id_pk_int") in filter_users]
 
         # Output - download mode or stdout mode
         if download_directory is not None:
             # Download mode: save to files
-            _save_event_notes_to_files(result, download_directory, clear_directory,
-                                        with_attachments=with_attachments, client=client)
-        elif output_format == 'json':
+            _save_event_notes_to_files(
+                result, download_directory, clear_directory, with_attachments=with_attachments, client=client
+            )
+        elif output_format == "json":
             sanitized = [_sanitize_note_for_output(note) for note in result]
             print(json.dumps(sanitized, indent=2))
-        elif output_format == 'snippet':
+        elif output_format == "snippet":
             if not result:
                 print("No notes found")
                 return
@@ -449,16 +465,19 @@ def event_read(client: AigonClient, event_name: str,
         sys.exit(1)
 
 
-def event_timeline(client: AigonClient, event_name: str,
-                   date: Optional[str] = None,
-                   from_time: Optional[str] = None,
-                   to_time: Optional[str] = None,
-                   test_users: Optional[List[int]] = None,
-                   format_style: int = 1,
-                   bucket_minutes: int = 5,
-                   processed_status: str = 'all',
-                   test_only: bool = False,
-                   filter_users: Optional[List[int]] = None) -> None:
+def event_timeline(
+    client: AigonClient,
+    event_name: str,
+    date: Optional[str] = None,
+    from_time: Optional[str] = None,
+    to_time: Optional[str] = None,
+    test_users: Optional[List[int]] = None,
+    format_style: int = 1,
+    bucket_minutes: int = 5,
+    processed_status: str = "all",
+    test_only: bool = False,
+    filter_users: Optional[List[int]] = None,
+) -> None:
     """Show submission timeline for event.
 
     Displays when participants submitted notes, useful for determining cutoffs.
@@ -503,24 +522,24 @@ def event_timeline(client: AigonClient, event_name: str,
             limit=1000,  # High limit for timeline
             max_bytes=-1,
             processed_status=processed_status,
-            note_type='user',
+            note_type="user",
             time_window_start=None,
             start_ts=start_ts,
             end_ts=end_ts,
             reverse=False,  # Chronological order
-            event=event_name
+            event=event_name,
         )
 
         # Filter test users
         if test_users:
             if test_only:
-                result = [n for n in result if n.get('user_id_pk_int') in test_users]
+                result = [n for n in result if n.get("user_id_pk_int") in test_users]
             else:
-                result = [n for n in result if n.get('user_id_pk_int') not in test_users]
+                result = [n for n in result if n.get("user_id_pk_int") not in test_users]
 
         # Filter to specific users if requested
         if filter_users:
-            result = [n for n in result if n.get('user_id_pk_int') in filter_users]
+            result = [n for n in result if n.get("user_id_pk_int") in filter_users]
 
         if not result:
             print("No submissions found for this date")
@@ -550,13 +569,13 @@ def _timeline_format_detailed(result: List[dict], base_date: datetime, event_nam
     max_time = None
 
     for note in result:
-        created_at = note.get('created_at')
+        created_at = note.get("created_at")
         if created_at:
             dt = datetime.fromtimestamp(int(created_at), tz=timezone.utc)
-            bucket_key = dt.strftime('%H:%M')
+            bucket_key = dt.strftime("%H:%M")
             if bucket_key not in buckets:
                 buckets[bucket_key] = []
-            buckets[bucket_key].append(note.get('user_id_pk_int'))
+            buckets[bucket_key].append(note.get("user_id_pk_int"))
 
             if min_time is None or bucket_key < min_time:
                 min_time = bucket_key
@@ -600,7 +619,7 @@ def _timeline_format_detailed(result: List[dict], base_date: datetime, event_nam
         count = len(users)
         # Pad user IDs to same length
         user_strs = [f"u{u:<{max_uid_len}}" for u in sorted(set(users))]
-        user_str = '[' + ','.join(user_strs) + ']' if user_strs else '[]'
+        user_str = "[" + ",".join(user_strs) + "]" if user_strs else "[]"
         print(f"{time_key} | {count:>{count_width}} | {user_str}")
 
     print("-" * 60)
@@ -617,13 +636,13 @@ def _timeline_format_note_ids(result: List[dict], base_date: datetime, event_nam
     max_time = None
 
     for note in result:
-        created_at = note.get('created_at')
+        created_at = note.get("created_at")
         if created_at:
             dt = datetime.fromtimestamp(int(created_at), tz=timezone.utc)
-            bucket_key = dt.strftime('%H:%M')
+            bucket_key = dt.strftime("%H:%M")
             if bucket_key not in buckets:
                 buckets[bucket_key] = []
-            unique_id = note.get('unique_id', 'unknown')
+            unique_id = note.get("unique_id", "unknown")
             short_id = unique_id[:6] if len(unique_id) >= 6 else unique_id
             buckets[bucket_key].append(short_id)
 
@@ -661,7 +680,7 @@ def _timeline_format_note_ids(result: List[dict], base_date: datetime, event_nam
     for time_key in all_buckets:
         note_ids = buckets.get(time_key, [])
         count = len(note_ids)
-        ids_str = '[' + ','.join(note_ids) + ']' if note_ids else '[]'
+        ids_str = "[" + ",".join(note_ids) + "]" if note_ids else "[]"
         print(f"{time_key} | {count:>{count_width}} | {ids_str}")
 
     print("-" * 60)
@@ -669,8 +688,9 @@ def _timeline_format_note_ids(result: List[dict], base_date: datetime, event_nam
     print()
 
 
-def _timeline_format_bar(result: List[dict], base_date: datetime, event_name: str,
-                         bucket_minutes: Optional[int] = None) -> None:
+def _timeline_format_bar(
+    result: List[dict], base_date: datetime, event_name: str, bucket_minutes: Optional[int] = None
+) -> None:
     """Format 2: Bar chart with equal-width time buckets.
 
     Auto-selects bucket size to have 10-30 buckets if not specified.
@@ -680,7 +700,7 @@ def _timeline_format_bar(result: List[dict], base_date: datetime, event_name: st
     # Get timestamps and find range
     timestamps = []
     for note in result:
-        created_at = note.get('created_at')
+        created_at = note.get("created_at")
         if created_at:
             timestamps.append(int(created_at))
 
@@ -748,7 +768,7 @@ def _timeline_format_bar(result: List[dict], base_date: datetime, event_name: st
     for bucket_ts in sorted(buckets.keys()):
         count = buckets[bucket_ts]
         dt = datetime.fromtimestamp(bucket_ts, tz=timezone.utc)
-        time_str = dt.strftime('%H:%M')
+        time_str = dt.strftime("%H:%M")
 
         # Calculate bar length (normalized to bar_width)
         if max_count > 0:
@@ -756,7 +776,7 @@ def _timeline_format_bar(result: List[dict], base_date: datetime, event_name: st
         else:
             bar_len = 0
 
-        bar = '█' * bar_len
+        bar = "█" * bar_len
 
         # Fixed-width formatting: time (5) + space + count (4) + space + bar
         print(f"{time_str} | {count:4d} | {bar}")
@@ -766,12 +786,15 @@ def _timeline_format_bar(result: List[dict], base_date: datetime, event_name: st
     print()
 
 
-def event_stats(client: AigonClient, event_name: str,
-                date: Optional[str] = None,
-                test_users: Optional[List[int]] = None,
-                format_style: int = 1,
-                test_only: bool = False,
-                filter_users: Optional[List[int]] = None) -> None:
+def event_stats(
+    client: AigonClient,
+    event_name: str,
+    date: Optional[str] = None,
+    test_users: Optional[List[int]] = None,
+    format_style: int = 1,
+    test_only: bool = False,
+    filter_users: Optional[List[int]] = None,
+) -> None:
     """Show user statistics for event.
 
     Args:
@@ -799,25 +822,25 @@ def event_stats(client: AigonClient, event_name: str,
         result = client.get_recent_notes(
             limit=10000,  # High limit for stats
             max_bytes=-1,
-            processed_status='all',
-            note_type='user',
+            processed_status="all",
+            note_type="user",
             time_window_start=None,
             start_ts=start_ts,
             end_ts=end_ts,
             reverse=False,
-            event=event_name
+            event=event_name,
         )
 
         # Filter test users
         if test_users:
             if test_only:
-                result = [n for n in result if n.get('user_id_pk_int') in test_users]
+                result = [n for n in result if n.get("user_id_pk_int") in test_users]
             else:
-                result = [n for n in result if n.get('user_id_pk_int') not in test_users]
+                result = [n for n in result if n.get("user_id_pk_int") not in test_users]
 
         # Filter to specific users if requested
         if filter_users:
-            result = [n for n in result if n.get('user_id_pk_int') in filter_users]
+            result = [n for n in result if n.get("user_id_pk_int") in filter_users]
 
         if not result:
             print("No notes found")
@@ -826,33 +849,28 @@ def event_stats(client: AigonClient, event_name: str,
         # Calculate statistics per user
         user_stats = {}
         for note in result:
-            user_id = note.get('user_id_pk_int')
+            user_id = note.get("user_id_pk_int")
             if user_id not in user_stats:
-                user_stats[user_id] = {
-                    'count': 0,
-                    'first': None,
-                    'last': None,
-                    'content_types': {},
-                    'note_ids': []
-                }
+                user_stats[user_id] = {"count": 0, "first": None, "last": None, "content_types": {}, "note_ids": []}
 
-            user_stats[user_id]['count'] += 1
+            user_stats[user_id]["count"] += 1
 
-            created_at = note.get('created_at')
+            created_at = note.get("created_at")
             if created_at:
                 ts = int(created_at)
-                if user_stats[user_id]['first'] is None or ts < user_stats[user_id]['first']:
-                    user_stats[user_id]['first'] = ts
-                if user_stats[user_id]['last'] is None or ts > user_stats[user_id]['last']:
-                    user_stats[user_id]['last'] = ts
+                if user_stats[user_id]["first"] is None or ts < user_stats[user_id]["first"]:
+                    user_stats[user_id]["first"] = ts
+                if user_stats[user_id]["last"] is None or ts > user_stats[user_id]["last"]:
+                    user_stats[user_id]["last"] = ts
 
-            content_type = note.get('content_type', 'text')
-            user_stats[user_id]['content_types'][content_type] = \
-                user_stats[user_id]['content_types'].get(content_type, 0) + 1
+            content_type = note.get("content_type", "text")
+            user_stats[user_id]["content_types"][content_type] = (
+                user_stats[user_id]["content_types"].get(content_type, 0) + 1
+            )
 
-            unique_id = note.get('unique_id', '')
+            unique_id = note.get("unique_id", "")
             short_id = unique_id[:6] if len(unique_id) >= 6 else unique_id
-            user_stats[user_id]['note_ids'].append(short_id)
+            user_stats[user_id]["note_ids"].append(short_id)
 
         # Display statistics
         date_str = date if date else "all time"
@@ -868,15 +886,19 @@ def event_stats(client: AigonClient, event_name: str,
         total_notes = 0
         for user_id in sorted(user_stats.keys()):
             stats = user_stats[user_id]
-            total_notes += stats['count']
+            total_notes += stats["count"]
 
-            first_time = datetime.fromtimestamp(stats['first'], tz=timezone.utc).strftime('%H:%M') if stats['first'] else '?'
-            last_time = datetime.fromtimestamp(stats['last'], tz=timezone.utc).strftime('%H:%M') if stats['last'] else '?'
+            first_time = (
+                datetime.fromtimestamp(stats["first"], tz=timezone.utc).strftime("%H:%M") if stats["first"] else "?"
+            )
+            last_time = (
+                datetime.fromtimestamp(stats["last"], tz=timezone.utc).strftime("%H:%M") if stats["last"] else "?"
+            )
 
             if format_style == 2:
-                last_col = '[' + ','.join(stats['note_ids']) + ']'
+                last_col = "[" + ",".join(stats["note_ids"]) + "]"
             else:
-                last_col = ', '.join(f"{k}:{v}" for k, v in sorted(stats['content_types'].items()))
+                last_col = ", ".join(f"{k}:{v}" for k, v in sorted(stats["content_types"].items()))
 
             print(f"u{user_id:<7} | {stats['count']:<6} | {first_time:<8} | {last_time:<8} | {last_col}")
 
@@ -888,11 +910,14 @@ def event_stats(client: AigonClient, event_name: str,
         sys.exit(1)
 
 
-def event_status(client: AigonClient, event_name: str,
-                 date: Optional[str] = None,
-                 test_users: Optional[List[int]] = None,
-                 test_only: bool = False,
-                 filter_users: Optional[List[int]] = None) -> None:
+def event_status(
+    client: AigonClient,
+    event_name: str,
+    date: Optional[str] = None,
+    test_users: Optional[List[int]] = None,
+    test_only: bool = False,
+    filter_users: Optional[List[int]] = None,
+) -> None:
     """Show event status overview - where am I now?
 
     Shows counts of processed/unprocessed notes and general stats.
@@ -924,41 +949,41 @@ def event_status(client: AigonClient, event_name: str,
         result = client.get_recent_notes(
             limit=10000,
             max_bytes=-1,
-            processed_status='all',
-            note_type='user',
+            processed_status="all",
+            note_type="user",
             time_window_start=None,
             start_ts=start_ts,
             end_ts=end_ts,
             reverse=False,
-            event=event_name
+            event=event_name,
         )
 
         # Filter test users
         if test_users:
             if test_only:
-                result = [n for n in result if n.get('user_id_pk_int') in test_users]
+                result = [n for n in result if n.get("user_id_pk_int") in test_users]
             else:
-                result = [n for n in result if n.get('user_id_pk_int') not in test_users]
+                result = [n for n in result if n.get("user_id_pk_int") not in test_users]
 
         # Filter to specific users if requested
         if filter_users:
-            result = [n for n in result if n.get('user_id_pk_int') in filter_users]
+            result = [n for n in result if n.get("user_id_pk_int") in filter_users]
 
         # Calculate stats
         total = len(result)
-        processed = sum(1 for n in result if n.get('processed_at'))
+        processed = sum(1 for n in result if n.get("processed_at"))
         unprocessed = total - processed
 
-        users = set(n.get('user_id_pk_int') for n in result)
+        users = set(n.get("user_id_pk_int") for n in result)
         user_count = len(users)
 
         # Time range
-        timestamps = [int(n.get('created_at', 0)) for n in result if n.get('created_at')]
+        timestamps = [int(n.get("created_at", 0)) for n in result if n.get("created_at")]
         if timestamps:
             first_ts = min(timestamps)
             last_ts = max(timestamps)
-            first_time = datetime.fromtimestamp(first_ts, tz=timezone.utc).strftime('%H:%M')
-            last_time = datetime.fromtimestamp(last_ts, tz=timezone.utc).strftime('%H:%M')
+            first_time = datetime.fromtimestamp(first_ts, tz=timezone.utc).strftime("%H:%M")
+            last_time = datetime.fromtimestamp(last_ts, tz=timezone.utc).strftime("%H:%M")
             time_range = f"{first_time} - {last_time}"
         else:
             time_range = "-"  # noqa: F841
@@ -997,14 +1022,17 @@ def event_status(client: AigonClient, event_name: str,
         sys.exit(1)
 
 
-def event_watch(client: AigonClient, event_name: str,
-                interval: float = 1.0,
-                start_time: Optional[str] = None,
-                clear_screen: bool = False,
-                simulate_rate: Optional[float] = None,
-                test_users: Optional[List[int]] = None,
-                test_only: bool = False,
-                filter_users: Optional[List[int]] = None) -> None:
+def event_watch(
+    client: AigonClient,
+    event_name: str,
+    interval: float = 1.0,
+    start_time: Optional[str] = None,
+    clear_screen: bool = False,
+    simulate_rate: Optional[float] = None,
+    test_users: Optional[List[int]] = None,
+    test_only: bool = False,
+    filter_users: Optional[List[int]] = None,
+) -> None:
     """Watch mode: continuously monitor for new submissions.
 
     Displays a single updating status line with progress indicator.
@@ -1045,12 +1073,14 @@ def event_watch(client: AigonClient, event_name: str,
         end_ts = watch_start_ts + 30 * 60  # 30 minutes ahead
 
         while current_ts < end_ts:
-            simulated_notes.append({
-                'created_at': int(current_ts),
-                'user_id_pk_int': random.randint(1, 10),
-                'processed_at': None,
-                'unique_id': f'sim_{len(simulated_notes):04d}'
-            })
+            simulated_notes.append(
+                {
+                    "created_at": int(current_ts),
+                    "user_id_pk_int": random.randint(1, 10),
+                    "processed_at": None,
+                    "unique_id": f"sim_{len(simulated_notes):04d}",
+                }
+            )
             wait = random.expovariate(1.0 / mean_interval)
             current_ts += wait
 
@@ -1061,30 +1091,30 @@ def event_watch(client: AigonClient, event_name: str,
         """
         if simulate_rate:
             now_ts = int(datetime.now(timezone.utc).timestamp())
-            return [n for n in simulated_notes if n['created_at'] <= now_ts and n['created_at'] >= watch_start_ts]
+            return [n for n in simulated_notes if n["created_at"] <= now_ts and n["created_at"] >= watch_start_ts]
 
         result = client.get_recent_notes(
             limit=10000,
             max_bytes=-1,
-            processed_status='all',
-            note_type='user',
+            processed_status="all",
+            note_type="user",
             time_window_start=None,
             start_ts=watch_start_ts,  # Only notes after watch start time
             end_ts=None,
             reverse=False,
-            event=event_name
+            event=event_name,
         )
 
         # Filter test users
         if test_users:
             if test_only:
-                result = [n for n in result if n.get('user_id_pk_int') in test_users]
+                result = [n for n in result if n.get("user_id_pk_int") in test_users]
             else:
-                result = [n for n in result if n.get('user_id_pk_int') not in test_users]
+                result = [n for n in result if n.get("user_id_pk_int") not in test_users]
 
         # Filter to specific users if requested
         if filter_users:
-            result = [n for n in result if n.get('user_id_pk_int') in filter_users]
+            result = [n for n in result if n.get("user_id_pk_int") in filter_users]
 
         return result
 
@@ -1095,12 +1125,12 @@ def event_watch(client: AigonClient, event_name: str,
         Only shows bins that have messages.
         """
         # Get all notes with timestamps
-        recent_notes = [n for n in notes if n.get('created_at')]
+        recent_notes = [n for n in notes if n.get("created_at")]
 
         if not recent_notes:
             return
 
-        timestamps = [int(n.get('created_at')) for n in recent_notes]
+        timestamps = [int(n.get("created_at")) for n in recent_notes]
         first_ts = min(timestamps)
         now_ts = int(datetime.now(timezone.utc).timestamp())
 
@@ -1129,10 +1159,10 @@ def event_watch(client: AigonClient, event_name: str,
         for bucket_ts in sorted(buckets.keys()):
             count = buckets[bucket_ts]
             dt = datetime.fromtimestamp(bucket_ts, tz=timezone.utc)
-            time_str = dt.strftime('%H:%M:%S')
+            time_str = dt.strftime("%H:%M:%S")
 
             bar_len = int((count / max_count) * bar_width) if max_count > 0 else 0
-            bar = '█' * bar_len
+            bar = "█" * bar_len
             print(f"  {time_str} | {count:3d} | {bar}")
 
         print()
@@ -1147,16 +1177,16 @@ def event_watch(client: AigonClient, event_name: str,
 
         if progress_pct is not None:
             # Progress bar: 10 chars with 8 fractional states each = 80 visual states
-            fractional_blocks = ' ▏▎▍▌▋▊▉█'  # 9 states: 0/8 to 8/8
+            fractional_blocks = " ▏▎▍▌▋▊▉█"  # 9 states: 0/8 to 8/8
             # Convert percentage to 0-80 scale
             total_eighths = int(progress_pct * 80 / 100)
             full_chars = total_eighths // 8
             frac_idx = total_eighths % 8
 
-            bar = '█' * full_chars
+            bar = "█" * full_chars
             if full_chars < 10:
                 bar += fractional_blocks[frac_idx]
-                bar += ' ' * (9 - full_chars)
+                bar += " " * (9 - full_chars)
 
             status += f" ▕{bar}▏"
 
@@ -1181,7 +1211,7 @@ def event_watch(client: AigonClient, event_name: str,
         try:
             if select.select([sys.stdin], [], [], 0)[0]:
                 ch = sys.stdin.read(1)
-                if ch == '\x1b' or ch == 'q':  # ESC or q
+                if ch == "\x1b" or ch == "q":  # ESC or q
                     return True
         except (select.error, IOError):
             pass
@@ -1190,7 +1220,9 @@ def event_watch(client: AigonClient, event_name: str,
     def print_header():
         """Print the watch mode header."""
         if simulate_rate:
-            print(f"Watching {event_name} [SIMULATE {simulate_rate}/min] (interval: {interval}min, since: {watch_start.strftime('%H:%M')})")
+            print(
+                f"Watching {event_name} [SIMULATE {simulate_rate}/min] (interval: {interval}min, since: {watch_start.strftime('%H:%M')})"
+            )
         else:
             print(f"Watching {event_name} (interval: {interval}min, since: {watch_start.strftime('%H:%M')})")
         print("Press ESC or Ctrl+C to exit")
@@ -1206,7 +1238,7 @@ def event_watch(client: AigonClient, event_name: str,
     # Assert simulation starts with 0 unprocessed
     if simulate_rate:
         initial_notes = fetch_notes()
-        initial_unprocessed = sum(1 for n in initial_notes if not n.get('processed_at'))
+        initial_unprocessed = sum(1 for n in initial_notes if not n.get("processed_at"))
         assert initial_unprocessed == 0, f"Simulation should start with 0 unprocessed, got {initial_unprocessed}"
         print(f"✓ Assertion passed: started with {initial_unprocessed} unprocessed")
 
@@ -1225,10 +1257,10 @@ def event_watch(client: AigonClient, event_name: str,
                 print_header()
 
             # Calculate stats
-            check_time = datetime.now(timezone.utc).strftime('%H:%M:%S')
+            check_time = datetime.now(timezone.utc).strftime("%H:%M:%S")
 
             total = len(result)
-            processed = sum(1 for n in result if n.get('processed_at'))
+            processed = sum(1 for n in result if n.get("processed_at"))
             unprocessed = total - processed
 
             # prev_unprocessed and prev_total reserved for future delta display
@@ -1281,7 +1313,7 @@ def event_watch(client: AigonClient, event_name: str,
         print("\n\nWatch mode stopped.")
 
 
-def _prompt(prompt_text: str, default: str = '') -> str:
+def _prompt(prompt_text: str, default: str = "") -> str:
     """Prompt user for input with default value.
 
     Args:
@@ -1301,15 +1333,13 @@ def _prompt(prompt_text: str, default: str = '') -> str:
 def _mask_token(token: str) -> str:
     """Mask a token for display."""
     if not token:
-        return ''
+        return ""
     if len(token) <= 8:
-        return '*' * len(token)
-    return token[:4] + '*' * (len(token) - 8) + token[-4:]
+        return "*" * len(token)
+    return token[:4] + "*" * (len(token) - 8) + token[-4:]
 
 
-def event_mark(client: AigonClient, unique_ids: List[str],
-               processed: bool,
-               output_format: str = 'llm') -> None:
+def event_mark(client: AigonClient, unique_ids: List[str], processed: bool, output_format: str = "llm") -> None:
     """Mark event participant notes as processed.
 
     Args:
@@ -1319,15 +1349,14 @@ def event_mark(client: AigonClient, unique_ids: List[str],
         output_format: Output format (llm for concise, json for full details)
     """
     try:
-        result = client.mark_notes(unique_ids=unique_ids, processed=processed,
-                                   exported=None, deleted=None)
+        result = client.mark_notes(unique_ids=unique_ids, processed=processed, exported=None, deleted=None)
 
-        if output_format == 'json':
+        if output_format == "json":
             print(json.dumps(result, indent=2))
         else:
             # LLM format: concise output
-            if result.get('success'):
-                batch_size = result.get('batch_size', 0)
+            if result.get("success"):
+                batch_size = result.get("batch_size", 0)
                 action_str = "processed" if processed else "unprocessed"
                 print(f"Marked {batch_size} note(s) as {action_str}")
             else:
@@ -1346,17 +1375,17 @@ def event_config_interactive() -> None:
     print("Press Enter to keep current value, or type new value.\n")
 
     # Get current values as defaults
-    current_token = get_config_value('event', 'token') or ''
-    current_name = get_event_name() or ''
-    current_test = get_config_value('event', 'test_users') or ''
-    current_admin = get_config_value('event', 'admin_users') or ''
+    current_token = get_config_value("event", "token") or ""
+    current_name = get_event_name() or ""
+    current_test = get_config_value("event", "test_users") or ""
+    current_admin = get_config_value("event", "admin_users") or ""
 
     # Prompt for values - token first (most important)
-    token_display = _mask_token(current_token) if current_token else ''
+    token_display = _mask_token(current_token) if current_token else ""
     event_token = _prompt("Event API token", token_display)
     # If user entered something different from masked version, use it
     if event_token and event_token != token_display:
-        set_config_value('event', 'token', event_token)
+        set_config_value("event", "token", event_token)
         print(f"  Set event.token = {_mask_token(event_token)}")
 
     event_name = _prompt("Event name", current_name)
@@ -1371,7 +1400,7 @@ def event_config_interactive() -> None:
     period_num = 1
     while True:
         period_key = str(period_num)
-        current_period = ''
+        current_period = ""
         if period_key in periods:
             start, end = periods[period_key]
             current_period = f"{start}-{end}"
@@ -1383,7 +1412,7 @@ def event_config_interactive() -> None:
             break
 
         if period_value:
-            set_config_value('event', f'period.{period_key}', period_value)
+            set_config_value("event", f"period.{period_key}", period_value)
             print(f"    Set period.{period_key} = {period_value}")
         elif current_period:
             # Keep existing
@@ -1396,29 +1425,31 @@ def event_config_interactive() -> None:
     # Save non-empty values
     print()
     if event_name:
-        set_config_value('event', 'name', event_name)
+        set_config_value("event", "name", event_name)
         print(f"Set event.name = {event_name}")
 
     if test_users:
-        set_config_value('event', 'test_users', test_users)
+        set_config_value("event", "test_users", test_users)
         print(f"Set event.test_users = {test_users}")
 
     if admin_users:
-        set_config_value('event', 'admin_users', admin_users)
+        set_config_value("event", "admin_users", admin_users)
         print(f"Set event.admin_users = {admin_users}")
 
     print("\nConfiguration saved.")
 
 
-def event_config_cmd(event_token: Optional[str] = None,
-                     event_name: Optional[str] = None,
-                     test_users: Optional[str] = None,
-                     admin_users: Optional[str] = None,
-                     period_name: Optional[str] = None,
-                     period_value: Optional[str] = None,
-                     show: bool = False,
-                     init_local: bool = False,
-                     interactive: bool = False) -> None:
+def event_config_cmd(
+    event_token: Optional[str] = None,
+    event_name: Optional[str] = None,
+    test_users: Optional[str] = None,
+    admin_users: Optional[str] = None,
+    period_name: Optional[str] = None,
+    period_value: Optional[str] = None,
+    show: bool = False,
+    init_local: bool = False,
+    interactive: bool = False,
+) -> None:
     """Configure event settings.
 
     Args:
@@ -1433,10 +1464,10 @@ def event_config_cmd(event_token: Optional[str] = None,
         interactive: Run interactive configuration
     """
     if init_local:
-        local_path = os.path.join(os.getcwd(), '.aigon')
+        local_path = os.path.join(os.getcwd(), ".aigon")
         if not os.path.exists(local_path):
-            with open(local_path, 'w') as f:
-                f.write('')
+            with open(local_path, "w") as f:
+                f.write("")
             print(f"Created local config file: {local_path}")
         else:
             print(f"Local config file already exists: {local_path}")
@@ -1446,20 +1477,26 @@ def event_config_cmd(event_token: Optional[str] = None,
         return
 
     # Show config if --show or no options provided
-    no_options = (event_token is None and event_name is None and test_users is None
-                  and admin_users is None and period_name is None and period_value is None
-                  and not init_local)
+    no_options = (
+        event_token is None
+        and event_name is None
+        and test_users is None
+        and admin_users is None
+        and period_name is None
+        and period_value is None
+        and not init_local
+    )
     if show or no_options:
         config = load_config()
         config_path = get_config_path()
         print(f"Config file: {config_path}")
 
-        if config.has_section('event'):
+        if config.has_section("event"):
             print("\n[event]")
-            for option in config.options('event'):
-                value = config.get('event', option)
+            for option in config.options("event"):
+                value = config.get("event", option)
                 # Mask token for display
-                if option == 'token':
+                if option == "token":
                     value = _mask_token(value)
                 print(f"  {option} = {value}")
         else:
@@ -1475,170 +1512,206 @@ def event_config_cmd(event_token: Optional[str] = None,
 
     # Set values
     if event_token:
-        set_config_value('event', 'token', event_token)
+        set_config_value("event", "token", event_token)
         print(f"Set event.token = {_mask_token(event_token)}")
 
     if event_name:
-        set_config_value('event', 'name', event_name)
+        set_config_value("event", "name", event_name)
         print(f"Set event.name = {event_name}")
 
     if test_users is not None:
-        set_config_value('event', 'test_users', test_users)
+        set_config_value("event", "test_users", test_users)
         print(f"Set event.test_users = {test_users}")
 
     if admin_users is not None:
-        set_config_value('event', 'admin_users', admin_users)
+        set_config_value("event", "admin_users", admin_users)
         print(f"Set event.admin_users = {admin_users}")
 
     if period_name and period_value:
-        set_config_value('event', f'period.{period_name}', period_value)
+        set_config_value("event", f"period.{period_name}", period_value)
         print(f"Set event.period.{period_name} = {period_value}")
 
 
 # ===== CLI Registration =====
 
+
 def register_event_commands(subparsers):
     """Register event commands with argument parser."""
-    event_parser = subparsers.add_parser('event', help='Event admin operations')
-    event_subparsers = event_parser.add_subparsers(dest='event_command', help='Event commands')
+    event_parser = subparsers.add_parser("event", help="Event admin operations")
+    event_subparsers = event_parser.add_subparsers(dest="event_command", help="Event commands")
 
     # Config command
-    config_parser = event_subparsers.add_parser('config', help='Configure event settings')
-    config_parser.add_argument('-i', '--interactive', action='store_true',
-                               help='Interactive configuration mode')
-    config_parser.add_argument('--token', dest='event_token',
-                               help='Set event API token')
-    config_parser.add_argument('--name', dest='event_name', help='Set event name')
-    config_parser.add_argument('--test-users', dest='test_users',
-                               help='Comma-separated test user IDs to filter out')
-    config_parser.add_argument('--admin-users', dest='admin_users',
-                               help='Comma-separated admin user IDs')
-    config_parser.add_argument('--period', dest='period_name',
-                               help='Period name to configure (e.g., "1" for period.1)')
-    config_parser.add_argument('--period-value', dest='period_value',
-                               help='Period time range (e.g., "10:00-10:30")')
-    config_parser.add_argument('--show', action='store_true',
-                               help='Show current event configuration')
-    config_parser.add_argument('--init', action='store_true', dest='init_local',
-                               help='Initialize local .aigon config file')
+    config_parser = event_subparsers.add_parser("config", help="Configure event settings")
+    config_parser.add_argument("-i", "--interactive", action="store_true", help="Interactive configuration mode")
+    config_parser.add_argument("--token", dest="event_token", help="Set event API token")
+    config_parser.add_argument("--name", dest="event_name", help="Set event name")
+    config_parser.add_argument("--test-users", dest="test_users", help="Comma-separated test user IDs to filter out")
+    config_parser.add_argument("--admin-users", dest="admin_users", help="Comma-separated admin user IDs")
+    config_parser.add_argument("--period", dest="period_name", help='Period name to configure (e.g., "1" for period.1)')
+    config_parser.add_argument("--period-value", dest="period_value", help='Period time range (e.g., "10:00-10:30")')
+    config_parser.add_argument("--show", action="store_true", help="Show current event configuration")
+    config_parser.add_argument(
+        "--init", action="store_true", dest="init_local", help="Initialize local .aigon config file"
+    )
 
     # Read command
-    read_parser = event_subparsers.add_parser('read', help='Read event participant notes')
-    read_parser.add_argument('--event', dest='event_name',
-                             help='Event name (default: from config)')
-    read_parser.add_argument('--limit', type=int, default=50,
-                             help='Maximum notes (default: 50)')
-    read_parser.add_argument('--format', choices=['json', 'llm', 'snippet'], default='llm',
-                             help='Output format (default: llm)')
-    read_parser.add_argument('--time', dest='time_range',
-                             help='Time range HH:MM-HH:MM [TZ] (e.g., 10:35-10:50 CET)')
-    read_parser.add_argument('--start-time', dest='start_time',
-                             help='Start time HH:MM [TZ]')
-    read_parser.add_argument('--end-time', dest='end_time',
-                             help='End time HH:MM [TZ]')
-    read_parser.add_argument('--period', dest='period',
-                             help='Use configured period (e.g., "1" for period.1)')
-    read_parser.add_argument('--date', dest='date',
-                             help='Date filter (ISO format, default: today)')
-    read_parser.add_argument('--newest', action='store_true',
-                             help='Get most recent notes (reversed order)')
+    read_parser = event_subparsers.add_parser("read", help="Read event participant notes")
+    read_parser.add_argument("--event", dest="event_name", help="Event name (default: from config)")
+    read_parser.add_argument("--limit", type=int, default=50, help="Maximum notes (default: 50)")
+    read_parser.add_argument(
+        "--format", choices=["json", "llm", "snippet"], default="llm", help="Output format (default: llm)"
+    )
+    read_parser.add_argument("--time", dest="time_range", help="Time range HH:MM-HH:MM [TZ] (e.g., 10:35-10:50 CET)")
+    read_parser.add_argument("--start-time", dest="start_time", help="Start time HH:MM [TZ]")
+    read_parser.add_argument("--end-time", dest="end_time", help="End time HH:MM [TZ]")
+    read_parser.add_argument("--period", dest="period", help='Use configured period (e.g., "1" for period.1)')
+    read_parser.add_argument("--date", dest="date", help="Date filter (ISO format, default: today)")
+    read_parser.add_argument("--newest", action="store_true", help="Get most recent notes (reversed order)")
     # Processed status filtering
-    read_parser.add_argument('--processed', action='store_true',
-                             help='Only processed notes')
-    read_parser.add_argument('--unprocessed', action='store_true',
-                             help='Only unprocessed notes (default)')
-    read_parser.add_argument('--all', action='store_true',
-                             help='All notes (processed and unprocessed)')
-    read_parser.add_argument('--test-only', action='store_true', dest='test_only',
-                             help='Only show test user data (instead of filtering them out)')
-    read_parser.add_argument('--users', dest='filter_users',
-                             help='Comma-separated user IDs to include (client-side filter)')
+    read_parser.add_argument("--processed", action="store_true", help="Only processed notes")
+    read_parser.add_argument("--unprocessed", action="store_true", help="Only unprocessed notes (default)")
+    read_parser.add_argument("--all", action="store_true", help="All notes (processed and unprocessed)")
+    read_parser.add_argument(
+        "--test-only",
+        action="store_true",
+        dest="test_only",
+        help="Only show test user data (instead of filtering them out)",
+    )
+    read_parser.add_argument(
+        "--users", dest="filter_users", help="Comma-separated user IDs to include (client-side filter)"
+    )
     # Download options
-    read_parser.add_argument('--download', nargs='?', const='_event_notes', default=None,
-                             help='Download notes to files. Optionally specify directory (default: _event_notes)')
-    read_parser.add_argument('--clear', action='store_true',
-                             help='Clear directory before downloading notes (requires --download)')
-    read_parser.add_argument('--with-attachments', dest='with_attachments',
-                             choices=['true', 'false'], default='true',
-                             help='Download attachments with notes (default: true)')
+    read_parser.add_argument(
+        "--download",
+        nargs="?",
+        const="_event_notes",
+        default=None,
+        help="Download notes to files. Optionally specify directory (default: _event_notes)",
+    )
+    read_parser.add_argument(
+        "--clear", action="store_true", help="Clear directory before downloading notes (requires --download)"
+    )
+    read_parser.add_argument(
+        "--with-attachments",
+        dest="with_attachments",
+        choices=["true", "false"],
+        default="true",
+        help="Download attachments with notes (default: true)",
+    )
 
     # Mark command
-    mark_parser = event_subparsers.add_parser('mark', help='Mark participant notes as processed')
-    mark_parser.add_argument('unique_ids', nargs='+', help='Unique IDs of notes to mark (minimum 2 characters each)')
-    mark_parser.add_argument('--processed', nargs='?', const='true', choices=['true', 'false'],
-                             help='Mark/unmark as processed (default: true if flag present)')
-    mark_parser.add_argument('--format', choices=['json', 'llm'], default='llm',
-                             help='Output format (default: llm)')
+    mark_parser = event_subparsers.add_parser("mark", help="Mark participant notes as processed")
+    mark_parser.add_argument("unique_ids", nargs="+", help="Unique IDs of notes to mark (minimum 2 characters each)")
+    mark_parser.add_argument(
+        "--processed",
+        nargs="?",
+        const="true",
+        choices=["true", "false"],
+        help="Mark/unmark as processed (default: true if flag present)",
+    )
+    mark_parser.add_argument("--format", choices=["json", "llm"], default="llm", help="Output format (default: llm)")
 
     # Timeline command
-    timeline_parser = event_subparsers.add_parser('timeline', help='Show submission timeline')
-    timeline_parser.add_argument('--event', dest='event_name',
-                                 help='Event name (default: from config)')
-    timeline_parser.add_argument('--date', dest='date',
-                                 help='Date filter (ISO format, default: today)')
-    timeline_parser.add_argument('--from', dest='from_time',
-                                 help='Start time HH:MM [TZ] (only notes after this)')
-    timeline_parser.add_argument('--to', dest='to_time',
-                                 help='End time HH:MM [TZ] (only notes before this)')
-    timeline_parser.add_argument('--format', dest='format_style', type=int, choices=[1, 2, 3], default=2,
-                                 help='Format: 1=user IDs, 2=bar chart (default), 3=note IDs')
-    timeline_parser.add_argument('--bucket', dest='bucket_minutes', type=int, default=None,
-                                 help='Minutes per bucket. Auto-selects for 10-30 buckets if not specified.')
+    timeline_parser = event_subparsers.add_parser("timeline", help="Show submission timeline")
+    timeline_parser.add_argument("--event", dest="event_name", help="Event name (default: from config)")
+    timeline_parser.add_argument("--date", dest="date", help="Date filter (ISO format, default: today)")
+    timeline_parser.add_argument("--from", dest="from_time", help="Start time HH:MM [TZ] (only notes after this)")
+    timeline_parser.add_argument("--to", dest="to_time", help="End time HH:MM [TZ] (only notes before this)")
+    timeline_parser.add_argument(
+        "--format",
+        dest="format_style",
+        type=int,
+        choices=[1, 2, 3],
+        default=2,
+        help="Format: 1=user IDs, 2=bar chart (default), 3=note IDs",
+    )
+    timeline_parser.add_argument(
+        "--bucket",
+        dest="bucket_minutes",
+        type=int,
+        default=None,
+        help="Minutes per bucket. Auto-selects for 10-30 buckets if not specified.",
+    )
     # Processed status filtering
-    timeline_parser.add_argument('--processed', action='store_true',
-                                 help='Only processed notes')
-    timeline_parser.add_argument('--unprocessed', action='store_true',
-                                 help='Only unprocessed notes')
-    timeline_parser.add_argument('--all', action='store_true',
-                                 help='All notes (default)')
-    timeline_parser.add_argument('--test-only', action='store_true', dest='test_only',
-                                 help='Only show test user data (instead of filtering them out)')
-    timeline_parser.add_argument('--users', dest='filter_users',
-                                 help='Comma-separated user IDs to include (client-side filter)')
+    timeline_parser.add_argument("--processed", action="store_true", help="Only processed notes")
+    timeline_parser.add_argument("--unprocessed", action="store_true", help="Only unprocessed notes")
+    timeline_parser.add_argument("--all", action="store_true", help="All notes (default)")
+    timeline_parser.add_argument(
+        "--test-only",
+        action="store_true",
+        dest="test_only",
+        help="Only show test user data (instead of filtering them out)",
+    )
+    timeline_parser.add_argument(
+        "--users", dest="filter_users", help="Comma-separated user IDs to include (client-side filter)"
+    )
 
     # Status command
-    status_parser = event_subparsers.add_parser('status', help='Show event status overview')
-    status_parser.add_argument('--event', dest='event_name',
-                               help='Event name (default: from config)')
-    status_parser.add_argument('--date', dest='date',
-                               help='Date filter (ISO format, default: all time)')
-    status_parser.add_argument('--test-only', action='store_true', dest='test_only',
-                               help='Only show test user data (instead of filtering them out)')
-    status_parser.add_argument('--users', dest='filter_users',
-                               help='Comma-separated user IDs to include (client-side filter)')
+    status_parser = event_subparsers.add_parser("status", help="Show event status overview")
+    status_parser.add_argument("--event", dest="event_name", help="Event name (default: from config)")
+    status_parser.add_argument("--date", dest="date", help="Date filter (ISO format, default: all time)")
+    status_parser.add_argument(
+        "--test-only",
+        action="store_true",
+        dest="test_only",
+        help="Only show test user data (instead of filtering them out)",
+    )
+    status_parser.add_argument(
+        "--users", dest="filter_users", help="Comma-separated user IDs to include (client-side filter)"
+    )
 
     # Watch command
-    watch_parser = event_subparsers.add_parser('watch', help='Watch mode: continuously monitor for new submissions')
-    watch_parser.add_argument('--event', dest='event_name',
-                              help='Event name (default: from config)')
-    watch_parser.add_argument('--interval', type=float, default=1.0,
-                              help='Minutes between checks (default: 1, supports fractions like 0.5)')
-    watch_parser.add_argument('--start', dest='start_time',
-                              help='Start time for timeline HH:MM (default: now)')
-    watch_parser.add_argument('--clear', action='store_true',
-                              help='Clear screen mode: full status display with screen refresh')
-    watch_parser.add_argument('--simulate', type=float, nargs='?', const=5.0, default=None,
-                              help='Simulate messages (default: 5/min Poisson arrivals) for testing')
-    watch_parser.add_argument('--test-only', action='store_true', dest='test_only',
-                              help='Only show test user data (instead of filtering them out)')
-    watch_parser.add_argument('--users', dest='filter_users',
-                              help='Comma-separated user IDs to include (client-side filter)')
+    watch_parser = event_subparsers.add_parser("watch", help="Watch mode: continuously monitor for new submissions")
+    watch_parser.add_argument("--event", dest="event_name", help="Event name (default: from config)")
+    watch_parser.add_argument(
+        "--interval", type=float, default=1.0, help="Minutes between checks (default: 1, supports fractions like 0.5)"
+    )
+    watch_parser.add_argument("--start", dest="start_time", help="Start time for timeline HH:MM (default: now)")
+    watch_parser.add_argument(
+        "--clear", action="store_true", help="Clear screen mode: full status display with screen refresh"
+    )
+    watch_parser.add_argument(
+        "--simulate",
+        type=float,
+        nargs="?",
+        const=5.0,
+        default=None,
+        help="Simulate messages (default: 5/min Poisson arrivals) for testing",
+    )
+    watch_parser.add_argument(
+        "--test-only",
+        action="store_true",
+        dest="test_only",
+        help="Only show test user data (instead of filtering them out)",
+    )
+    watch_parser.add_argument(
+        "--users", dest="filter_users", help="Comma-separated user IDs to include (client-side filter)"
+    )
 
     # Stats command
-    stats_parser = event_subparsers.add_parser('stats', help='Show user statistics')
-    stats_parser.add_argument('--event', dest='event_name',
-                              help='Event name (default: from config)')
-    stats_parser.add_argument('--date', dest='date',
-                              help='Date filter (ISO format, default: all time)')
-    stats_parser.add_argument('--format', dest='format_style', type=int, choices=[1, 2], default=2,
-                              help='Format: 1=content types, 2=note IDs (default)')
-    stats_parser.add_argument('--test-only', action='store_true', dest='test_only',
-                              help='Only show test user data (instead of filtering them out)')
-    stats_parser.add_argument('--users', dest='filter_users',
-                              help='Comma-separated user IDs to include (client-side filter)')
+    stats_parser = event_subparsers.add_parser("stats", help="Show user statistics")
+    stats_parser.add_argument("--event", dest="event_name", help="Event name (default: from config)")
+    stats_parser.add_argument("--date", dest="date", help="Date filter (ISO format, default: all time)")
+    stats_parser.add_argument(
+        "--format",
+        dest="format_style",
+        type=int,
+        choices=[1, 2],
+        default=2,
+        help="Format: 1=content types, 2=note IDs (default)",
+    )
+    stats_parser.add_argument(
+        "--test-only",
+        action="store_true",
+        dest="test_only",
+        help="Only show test user data (instead of filtering them out)",
+    )
+    stats_parser.add_argument(
+        "--users", dest="filter_users", help="Comma-separated user IDs to include (client-side filter)"
+    )
 
     # Help command
-    event_subparsers.add_parser('help', help='Show event help')
+    event_subparsers.add_parser("help", help="Show event help")
 
 
 def handle_event_command(args, client: AigonClient = None):
@@ -1648,129 +1721,146 @@ def handle_event_command(args, client: AigonClient = None):
         args: Parsed command-line arguments
         client: Authenticated Aigon client (None for config command)
     """
-    if args.event_command == 'config':
+    if args.event_command == "config":
         event_config_cmd(
-            event_token=getattr(args, 'event_token', None),
-            event_name=getattr(args, 'event_name', None),
-            test_users=getattr(args, 'test_users', None),
-            admin_users=getattr(args, 'admin_users', None),
-            period_name=getattr(args, 'period_name', None),
-            period_value=getattr(args, 'period_value', None),
-            show=getattr(args, 'show', False),
-            init_local=getattr(args, 'init_local', False),
-            interactive=getattr(args, 'interactive', False)
+            event_token=getattr(args, "event_token", None),
+            event_name=getattr(args, "event_name", None),
+            test_users=getattr(args, "test_users", None),
+            admin_users=getattr(args, "admin_users", None),
+            period_name=getattr(args, "period_name", None),
+            period_value=getattr(args, "period_value", None),
+            show=getattr(args, "show", False),
+            init_local=getattr(args, "init_local", False),
+            interactive=getattr(args, "interactive", False),
         )
-    elif args.event_command == 'read':
+    elif args.event_command == "read":
         # Get event name from args or config
-        event_name = getattr(args, 'event_name', None) or get_event_name()
+        event_name = getattr(args, "event_name", None) or get_event_name()
         if not event_name:
-            print("Error: No event name specified. Use --event or configure with 'aigon event config --name <event>'", file=sys.stderr)
+            print(
+                "Error: No event name specified. Use --event or configure with 'aigon event config --name <event>'",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
         # Validate --clear requires --download
-        if getattr(args, 'clear', False) and getattr(args, 'download', None) is None:
+        if getattr(args, "clear", False) and getattr(args, "download", None) is None:
             print("Error: --clear requires --download flag", file=sys.stderr)
             sys.exit(1)
 
         # Determine processed_status from flags
-        if getattr(args, 'all', False):
-            processed_status = 'all'
-        elif getattr(args, 'processed', False):
-            processed_status = 'processed'
+        if getattr(args, "all", False):
+            processed_status = "all"
+        elif getattr(args, "processed", False):
+            processed_status = "processed"
         else:
             # Default: unprocessed only
-            processed_status = 'unprocessed'
+            processed_status = "unprocessed"
 
         # Parse --with-attachments (string to bool)
-        with_attachments_str = getattr(args, 'with_attachments', 'true')
-        with_attachments = with_attachments_str == 'true'
+        with_attachments_str = getattr(args, "with_attachments", "true")
+        with_attachments = with_attachments_str == "true"
 
-        event_read(client, event_name=event_name,
-                   limit=args.limit,
-                   output_format=args.format,
-                   time_range=getattr(args, 'time_range', None),
-                   start_time=getattr(args, 'start_time', None),
-                   end_time=getattr(args, 'end_time', None),
-                   period=getattr(args, 'period', None),
-                   date=getattr(args, 'date', None),
-                   newest=getattr(args, 'newest', False),
-                   processed_status=processed_status,
-                   test_only=getattr(args, 'test_only', False),
-                   filter_users=parse_user_list(getattr(args, 'filter_users', None)),
-                   download_directory=getattr(args, 'download', None),
-                   clear_directory=getattr(args, 'clear', False),
-                   with_attachments=with_attachments)
-    elif args.event_command == 'mark':
+        event_read(
+            client,
+            event_name=event_name,
+            limit=args.limit,
+            output_format=args.format,
+            time_range=getattr(args, "time_range", None),
+            start_time=getattr(args, "start_time", None),
+            end_time=getattr(args, "end_time", None),
+            period=getattr(args, "period", None),
+            date=getattr(args, "date", None),
+            newest=getattr(args, "newest", False),
+            processed_status=processed_status,
+            test_only=getattr(args, "test_only", False),
+            filter_users=parse_user_list(getattr(args, "filter_users", None)),
+            download_directory=getattr(args, "download", None),
+            clear_directory=getattr(args, "clear", False),
+            with_attachments=with_attachments,
+        )
+    elif args.event_command == "mark":
         # Convert string arg to bool or None
         processed = None
-        if hasattr(args, 'processed') and args.processed:
-            processed = args.processed == 'true'
+        if hasattr(args, "processed") and args.processed:
+            processed = args.processed == "true"
 
         # Validate flag is specified
         if processed is None:
             print("Error: --processed flag must be specified", file=sys.stderr)
             sys.exit(1)
 
-        event_mark(client, unique_ids=args.unique_ids, processed=processed,
-                   output_format=args.format)
-    elif args.event_command == 'timeline':
-        event_name = getattr(args, 'event_name', None) or get_event_name()
+        event_mark(client, unique_ids=args.unique_ids, processed=processed, output_format=args.format)
+    elif args.event_command == "timeline":
+        event_name = getattr(args, "event_name", None) or get_event_name()
         if not event_name:
             print("Error: No event name specified", file=sys.stderr)
             sys.exit(1)
 
         # Determine processed_status from flags (default: all)
-        if getattr(args, 'processed', False):
-            processed_status = 'processed'
-        elif getattr(args, 'unprocessed', False):
-            processed_status = 'unprocessed'
+        if getattr(args, "processed", False):
+            processed_status = "processed"
+        elif getattr(args, "unprocessed", False):
+            processed_status = "unprocessed"
         else:
-            processed_status = 'all'
+            processed_status = "all"
 
-        event_timeline(client, event_name=event_name,
-                       date=getattr(args, 'date', None),
-                       from_time=getattr(args, 'from_time', None),
-                       to_time=getattr(args, 'to_time', None),
-                       format_style=getattr(args, 'format_style', 2),
-                       bucket_minutes=getattr(args, 'bucket_minutes', None),
-                       processed_status=processed_status,
-                       test_only=getattr(args, 'test_only', False),
-                       filter_users=parse_user_list(getattr(args, 'filter_users', None)))
-    elif args.event_command == 'status':
-        event_name = getattr(args, 'event_name', None) or get_event_name()
+        event_timeline(
+            client,
+            event_name=event_name,
+            date=getattr(args, "date", None),
+            from_time=getattr(args, "from_time", None),
+            to_time=getattr(args, "to_time", None),
+            format_style=getattr(args, "format_style", 2),
+            bucket_minutes=getattr(args, "bucket_minutes", None),
+            processed_status=processed_status,
+            test_only=getattr(args, "test_only", False),
+            filter_users=parse_user_list(getattr(args, "filter_users", None)),
+        )
+    elif args.event_command == "status":
+        event_name = getattr(args, "event_name", None) or get_event_name()
         if not event_name:
             print("Error: No event name specified", file=sys.stderr)
             sys.exit(1)
 
-        event_status(client, event_name=event_name,
-                     date=getattr(args, 'date', None),
-                     test_only=getattr(args, 'test_only', False),
-                     filter_users=parse_user_list(getattr(args, 'filter_users', None)))
-    elif args.event_command == 'watch':
-        event_name = getattr(args, 'event_name', None) or get_event_name()
+        event_status(
+            client,
+            event_name=event_name,
+            date=getattr(args, "date", None),
+            test_only=getattr(args, "test_only", False),
+            filter_users=parse_user_list(getattr(args, "filter_users", None)),
+        )
+    elif args.event_command == "watch":
+        event_name = getattr(args, "event_name", None) or get_event_name()
         if not event_name:
             print("Error: No event name specified", file=sys.stderr)
             sys.exit(1)
 
-        event_watch(client, event_name=event_name,
-                    interval=getattr(args, 'interval', 1.0),
-                    start_time=getattr(args, 'start_time', None),
-                    clear_screen=getattr(args, 'clear', False),
-                    simulate_rate=getattr(args, 'simulate', None),
-                    test_only=getattr(args, 'test_only', False),
-                    filter_users=parse_user_list(getattr(args, 'filter_users', None)))
-    elif args.event_command == 'stats':
-        event_name = getattr(args, 'event_name', None) or get_event_name()
+        event_watch(
+            client,
+            event_name=event_name,
+            interval=getattr(args, "interval", 1.0),
+            start_time=getattr(args, "start_time", None),
+            clear_screen=getattr(args, "clear", False),
+            simulate_rate=getattr(args, "simulate", None),
+            test_only=getattr(args, "test_only", False),
+            filter_users=parse_user_list(getattr(args, "filter_users", None)),
+        )
+    elif args.event_command == "stats":
+        event_name = getattr(args, "event_name", None) or get_event_name()
         if not event_name:
             print("Error: No event name specified", file=sys.stderr)
             sys.exit(1)
 
-        event_stats(client, event_name=event_name,
-                    date=getattr(args, 'date', None),
-                    format_style=getattr(args, 'format_style', 2),
-                    test_only=getattr(args, 'test_only', False),
-                    filter_users=parse_user_list(getattr(args, 'filter_users', None)))
-    elif args.event_command == 'help':
+        event_stats(
+            client,
+            event_name=event_name,
+            date=getattr(args, "date", None),
+            format_style=getattr(args, "format_style", 2),
+            test_only=getattr(args, "test_only", False),
+            filter_users=parse_user_list(getattr(args, "filter_users", None)),
+        )
+    elif args.event_command == "help":
         print("Event Commands - Admin operations for event participant notes")
         print("")
         print("Setup:")

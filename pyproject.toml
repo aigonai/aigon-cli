@@ -1,7 +1,7 @@
 [project]
 name = "aigon-cli"
 # KEEP IN SYNC with aigon_cli/version.py __version__
-version = "0.24.2"
+version = "0.25"
 description = "Command-line interface for the Aigon AI assistant ecosystem"
 requires-python = ">=3.10"
 dependencies = [

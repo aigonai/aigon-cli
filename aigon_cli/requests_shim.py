@@ -17,6 +17,7 @@ from typing import Any, Dict, Optional
 
 class HTTPError(Exception):
     """HTTP error exception."""
+
     pass
 
 
@@ -32,10 +33,10 @@ class Response:
         """
         self._response = urllib_response
         self.url = url
-        self.status_code = urllib_response.status if hasattr(urllib_response, 'status') else urllib_response.code
+        self.status_code = urllib_response.status if hasattr(urllib_response, "status") else urllib_response.code
         self._content = None
         # Extract headers from urllib response
-        self.headers = dict(urllib_response.headers) if hasattr(urllib_response, 'headers') else {}
+        self.headers = dict(urllib_response.headers) if hasattr(urllib_response, "headers") else {}
 
     def json(self) -> Any:
         """Parse response as JSON.
@@ -45,7 +46,7 @@ class Response:
         """
         if self._content is None:
             self._content = self._response.read()
-        return json_module.loads(self._content.decode('utf-8'))
+        return json_module.loads(self._content.decode("utf-8"))
 
     @property
     def text(self) -> str:
@@ -56,7 +57,7 @@ class Response:
         """
         if self._content is None:
             self._content = self._response.read()
-        return self._content.decode('utf-8')
+        return self._content.decode("utf-8")
 
     @property
     def content(self) -> bytes:
@@ -98,15 +99,18 @@ def _build_url(url: str, params: Optional[Dict[str, Any]] = None) -> str:
         return url
 
     query = urllib.parse.urlencode(filtered)
-    separator = '&' if '?' in url else '?'
+    separator = "&" if "?" in url else "?"
     return f"{url}{separator}{query}"
 
 
-def _make_request(method: str, url: str,
-                 headers: Optional[Dict[str, str]] = None,
-                 params: Optional[Dict[str, Any]] = None,
-                 json: Optional[Any] = None,
-                 data: Optional[str] = None) -> Response:
+def _make_request(
+    method: str,
+    url: str,
+    headers: Optional[Dict[str, str]] = None,
+    params: Optional[Dict[str, Any]] = None,
+    json: Optional[Any] = None,
+    data: Optional[str] = None,
+) -> Response:
     """Make HTTP request using urllib.
 
     Args:
@@ -131,19 +135,14 @@ def _make_request(method: str, url: str,
     request_headers = dict(headers) if headers else {}
 
     if json is not None:
-        request_data = json_module.dumps(json).encode('utf-8')
-        if 'Content-Type' not in request_headers:
-            request_headers['Content-Type'] = 'application/json'
+        request_data = json_module.dumps(json).encode("utf-8")
+        if "Content-Type" not in request_headers:
+            request_headers["Content-Type"] = "application/json"
     elif data is not None:
-        request_data = data.encode('utf-8') if isinstance(data, str) else data
+        request_data = data.encode("utf-8") if isinstance(data, str) else data
 
     # Create request
-    req = urllib.request.Request(
-        full_url,
-        data=request_data,
-        headers=request_headers,
-        method=method
-    )
+    req = urllib.request.Request(full_url, data=request_data, headers=request_headers, method=method)
 
     # Make request and handle errors
     try:
@@ -157,8 +156,7 @@ def _make_request(method: str, url: str,
         raise HTTPError(f"URL error: {e.reason}") from e
 
 
-def get(url: str, headers: Optional[Dict[str, str]] = None,
-        params: Optional[Dict[str, Any]] = None) -> Response:
+def get(url: str, headers: Optional[Dict[str, str]] = None, params: Optional[Dict[str, Any]] = None) -> Response:
     """Make GET request.
 
     Args:
@@ -169,12 +167,15 @@ def get(url: str, headers: Optional[Dict[str, str]] = None,
     Returns:
         Response object
     """
-    return _make_request('GET', url, headers=headers, params=params)
+    return _make_request("GET", url, headers=headers, params=params)
 
 
-def post(url: str, headers: Optional[Dict[str, str]] = None,
-         params: Optional[Dict[str, Any]] = None,
-         json: Optional[Any] = None) -> Response:
+def post(
+    url: str,
+    headers: Optional[Dict[str, str]] = None,
+    params: Optional[Dict[str, Any]] = None,
+    json: Optional[Any] = None,
+) -> Response:
     """Make POST request.
 
     Args:
@@ -186,13 +187,16 @@ def post(url: str, headers: Optional[Dict[str, str]] = None,
     Returns:
         Response object
     """
-    return _make_request('POST', url, headers=headers, params=params, json=json)
+    return _make_request("POST", url, headers=headers, params=params, json=json)
 
 
-def put(url: str, headers: Optional[Dict[str, str]] = None,
-        params: Optional[Dict[str, Any]] = None,
-        data: Optional[str] = None,
-        json: Optional[Any] = None) -> Response:
+def put(
+    url: str,
+    headers: Optional[Dict[str, str]] = None,
+    params: Optional[Dict[str, Any]] = None,
+    data: Optional[str] = None,
+    json: Optional[Any] = None,
+) -> Response:
     """Make PUT request.
 
     Args:
@@ -205,13 +209,16 @@ def put(url: str, headers: Optional[Dict[str, str]] = None,
     Returns:
         Response object
     """
-    return _make_request('PUT', url, headers=headers, params=params, data=data, json=json)
+    return _make_request("PUT", url, headers=headers, params=params, data=data, json=json)
 
 
-def patch(url: str, headers: Optional[Dict[str, str]] = None,
-          params: Optional[Dict[str, Any]] = None,
-          data: Optional[str] = None,
-          json: Optional[Any] = None) -> Response:
+def patch(
+    url: str,
+    headers: Optional[Dict[str, str]] = None,
+    params: Optional[Dict[str, Any]] = None,
+    data: Optional[str] = None,
+    json: Optional[Any] = None,
+) -> Response:
     """Make PATCH request.
 
     Args:
@@ -224,11 +231,10 @@ def patch(url: str, headers: Optional[Dict[str, str]] = None,
     Returns:
         Response object
     """
-    return _make_request('PATCH', url, headers=headers, params=params, data=data, json=json)
+    return _make_request("PATCH", url, headers=headers, params=params, data=data, json=json)
 
 
-def delete(url: str, headers: Optional[Dict[str, str]] = None,
-           params: Optional[Dict[str, Any]] = None) -> Response:
+def delete(url: str, headers: Optional[Dict[str, str]] = None, params: Optional[Dict[str, Any]] = None) -> Response:
     """Make DELETE request.
 
     Args:
@@ -239,10 +245,11 @@ def delete(url: str, headers: Optional[Dict[str, str]] = None,
     Returns:
         Response object
     """
-    return _make_request('DELETE', url, headers=headers, params=params)
+    return _make_request("DELETE", url, headers=headers, params=params)
 
 
 # Create exceptions namespace to match requests library
 class exceptions:
     """Exception classes matching requests.exceptions."""
+
     HTTPError = HTTPError

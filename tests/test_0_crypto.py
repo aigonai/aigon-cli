@@ -5,27 +5,25 @@ Tests are platform-aware and skip backends that aren't available.
 (c) Stefan LOESCH 2025-26. All rights reserved.
 """
 
-import base64
 import os
-import platform
-import pytest
 import shutil
 import time
 
-from aigon_cli.crypto import (
-    get_platform_info,
-    derive_key,
-    select_backend,
-    encrypt,
-    decrypt,
-    _encrypt_openssl,
-    _decrypt_openssl,
-    _encrypt_powershell,
-    _decrypt_powershell,
-    _encrypt_vendored,
-    _decrypt_vendored,
-)
+import pytest
 
+from aigon_cli.crypto import (
+    _decrypt_openssl,
+    _decrypt_powershell,
+    _decrypt_vendored,
+    _encrypt_openssl,
+    _encrypt_powershell,
+    _encrypt_vendored,
+    decrypt,
+    derive_key,
+    encrypt,
+    get_platform_info,
+    select_backend,
+)
 
 # Test data of varying sizes
 TEST_DATA_SMALL = b"Hello, World!"
@@ -41,13 +39,13 @@ class TestPlatformInfo:
     def test_get_platform_info_returns_dict(self):
         info = get_platform_info()
         assert isinstance(info, dict)
-        assert 'system' in info
-        assert 'openssl_available' in info
-        assert 'powershell_available' in info
+        assert "system" in info
+        assert "openssl_available" in info
+        assert "powershell_available" in info
 
     def test_system_is_valid(self):
         info = get_platform_info()
-        assert info['system'] in ('Darwin', 'Linux', 'Windows')
+        assert info["system"] in ("Darwin", "Linux", "Windows")
 
 
 class TestKeyDerivation:
@@ -82,23 +80,23 @@ class TestBackendSelection:
 
     def test_select_auto_returns_valid_backend(self):
         backend = select_backend("auto")
-        assert backend in ('openssl', 'powershell', 'vendored')
+        assert backend in ("openssl", "powershell", "vendored")
 
     def test_select_native_on_mac_linux(self):
         info = get_platform_info()
-        if info['system'] in ('Darwin', 'Linux') and info['openssl_available']:
+        if info["system"] in ("Darwin", "Linux") and info["openssl_available"]:
             backend = select_backend("native")
             assert backend == "openssl"
 
     def test_select_native_on_windows(self):
         info = get_platform_info()
-        if info['system'] == 'Windows' and info['powershell_available']:
+        if info["system"] == "Windows" and info["powershell_available"]:
             backend = select_backend("native")
             assert backend == "powershell"
 
     def test_select_openssl_when_available(self):
         info = get_platform_info()
-        if info['openssl_available']:
+        if info["openssl_available"]:
             backend = select_backend("openssl")
             assert backend == "openssl"
         else:
@@ -107,7 +105,7 @@ class TestBackendSelection:
 
     def test_select_powershell_when_available(self):
         info = get_platform_info()
-        if info['powershell_available']:
+        if info["powershell_available"]:
             backend = select_backend("powershell")
             assert backend == "powershell"
         else:
@@ -129,7 +127,7 @@ class TestOpenSSLBackend:
 
     @pytest.fixture(autouse=True)
     def skip_if_unavailable(self):
-        if not shutil.which('openssl'):
+        if not shutil.which("openssl"):
             pytest.skip("OpenSSL not available")
 
     def test_encrypt_decrypt_roundtrip_small(self):
@@ -183,7 +181,7 @@ class TestPowerShellBackend:
 
     @pytest.fixture(autouse=True)
     def skip_if_unavailable(self):
-        if not (shutil.which('powershell') or shutil.which('pwsh')):
+        if not (shutil.which("powershell") or shutil.which("pwsh")):
             pytest.skip("PowerShell not available")
 
     def test_encrypt_decrypt_roundtrip_small(self):
@@ -207,7 +205,7 @@ class TestVendoredBackend:
     @pytest.fixture(autouse=True)
     def skip_if_unavailable(self):
         try:
-            from aigon_cli.vendored import pyaes
+            from aigon_cli.vendored import pyaes  # noqa: F401  (availability probe)
         except ImportError:
             pytest.skip("Vendored pyaes not available")
 
@@ -232,7 +230,9 @@ class TestVendoredBackend:
         plaintext = _decrypt_vendored(ciphertext, key, iv)
         assert plaintext == TEST_DATA_LARGE
 
-    @pytest.mark.xfail(reason="AES-CBC cannot reliably detect wrong-key decryption - garbage output may have valid-looking padding")
+    @pytest.mark.xfail(
+        reason="AES-CBC cannot reliably detect wrong-key decryption - garbage output may have valid-looking padding"
+    )
     def test_wrong_key_fails_decrypt(self):
         key1 = os.urandom(32)
         key2 = os.urandom(32)
@@ -263,7 +263,7 @@ class TestHighLevelAPI:
 
     def test_wrong_password_fails(self):
         encrypted = encrypt(TEST_DATA_SMALL, "correct_password")
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017  (any exception type is acceptable here — just verifying decrypt rejects wrong password)
             decrypt(encrypted, "wrong_password")
 
     def test_medium_data_roundtrip(self):
@@ -280,13 +280,14 @@ class TestCrossBackendCompatibility:
         """Get list of available backends."""
         backends = []
         info = get_platform_info()
-        if info['openssl_available']:
-            backends.append('openssl')
-        if info['powershell_available']:
-            backends.append('powershell')
+        if info["openssl_available"]:
+            backends.append("openssl")
+        if info["powershell_available"]:
+            backends.append("powershell")
         try:
-            from aigon_cli.vendored import pyaes
-            backends.append('vendored')
+            from aigon_cli.vendored import pyaes  # noqa: F401  (availability probe)
+
+            backends.append("vendored")
         except ImportError:
             pass
         return backends
@@ -327,35 +328,41 @@ class TestPerformance:
             assert decrypted == data
 
         return {
-            'encrypt_avg_ms': sum(encrypt_times) / len(encrypt_times) * 1000,
-            'decrypt_avg_ms': sum(decrypt_times) / len(decrypt_times) * 1000,
+            "encrypt_avg_ms": sum(encrypt_times) / len(encrypt_times) * 1000,
+            "decrypt_avg_ms": sum(decrypt_times) / len(decrypt_times) * 1000,
         }
 
     def test_openssl_performance(self):
-        if not shutil.which('openssl'):
+        if not shutil.which("openssl"):
             pytest.skip("OpenSSL not available")
 
         for size, label in self.TEST_SIZES:
             data = os.urandom(size)
-            result = self._benchmark_backend('openssl', data)
-            print(f"\nOpenSSL {label}: encrypt={result['encrypt_avg_ms']:.2f}ms, decrypt={result['decrypt_avg_ms']:.2f}ms")
+            result = self._benchmark_backend("openssl", data)
+            print(
+                f"\nOpenSSL {label}: encrypt={result['encrypt_avg_ms']:.2f}ms, decrypt={result['decrypt_avg_ms']:.2f}ms"
+            )
 
     def test_powershell_performance(self):
-        if not (shutil.which('powershell') or shutil.which('pwsh')):
+        if not (shutil.which("powershell") or shutil.which("pwsh")):
             pytest.skip("PowerShell not available")
 
         for size, label in self.TEST_SIZES:
             data = os.urandom(size)
-            result = self._benchmark_backend('powershell', data)
-            print(f"\nPowerShell {label}: encrypt={result['encrypt_avg_ms']:.2f}ms, decrypt={result['decrypt_avg_ms']:.2f}ms")
+            result = self._benchmark_backend("powershell", data)
+            print(
+                f"\nPowerShell {label}: encrypt={result['encrypt_avg_ms']:.2f}ms, decrypt={result['decrypt_avg_ms']:.2f}ms"
+            )
 
     def test_vendored_performance(self):
         try:
-            from aigon_cli.vendored import pyaes
+            from aigon_cli.vendored import pyaes  # noqa: F401  (availability probe)
         except ImportError:
             pytest.skip("Vendored pyaes not available")
 
         for size, label in self.TEST_SIZES:
             data = os.urandom(size)
-            result = self._benchmark_backend('vendored', data)
-            print(f"\nVendored {label}: encrypt={result['encrypt_avg_ms']:.2f}ms, decrypt={result['decrypt_avg_ms']:.2f}ms")
+            result = self._benchmark_backend("vendored", data)
+            print(
+                f"\nVendored {label}: encrypt={result['encrypt_avg_ms']:.2f}ms, decrypt={result['decrypt_avg_ms']:.2f}ms"
+            )

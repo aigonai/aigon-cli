@@ -62,6 +62,45 @@ def handle_llm_command(args):
         show_level_2_help(command_path)
 
 
+def get_help_for_command(command_path):
+    """Get help content for a command path (any level).
+
+    Tries to match:
+    1. Exact Level 2 match (e.g., "notetaker read")
+    2. Domain/Level 1 match (e.g., "notetaker" → notes help, "filedb" → files help)
+    3. Returns None if no match found
+
+    Args:
+        command_path: Space-separated command path (e.g., "notetaker read" or "notes")
+
+    Returns:
+        Help content string, or None if not found
+    """
+    # Try exact Level 2 match first
+    if command_path in LEVEL_2_HELP:
+        return LEVEL_2_HELP[command_path]
+
+    # Try domain-level match (first word)
+    parts = command_path.split()
+    if parts:
+        domain = parts[0].lower()
+
+        # Map domain aliases to help getters
+        domain_map = {
+            "notetaker": get_llm_help_content_notes,
+            "notes": get_llm_help_content_notes,
+            "filedb": get_llm_help_content_files,
+            "files": get_llm_help_content_files,
+            "event": get_llm_help_content_event,
+            "events": get_llm_help_content_event,
+        }
+
+        if domain in domain_map:
+            return domain_map[domain]()
+
+    return None
+
+
 def show_level_2_help(command_path):
     """Display per-command help for LLMs (Level 2).
 
@@ -493,9 +532,9 @@ Useful for understanding submission patterns during the event.
 }
 
 
-def show_llm_help_notes():
-    """Display concise notetaker help for LLMs."""
-    help_text = """
+def get_llm_help_content_notes():
+    """Get concise notetaker help content (Level 1)."""
+    return """
 # Notetaker Commands (aigon llmhelp notes)
 
 ## Note References - IMPORTANT
@@ -558,12 +597,16 @@ For detailed help on a specific notetaker command:
 
 Works for any notetaker subcommand.
 """
-    print(help_text)
 
 
-def show_llm_help_files():
-    """Display concise filedb help for LLMs."""
-    help_text = """
+def show_llm_help_notes():
+    """Display concise notetaker help for LLMs."""
+    print(get_llm_help_content_notes())
+
+
+def get_llm_help_content_files():
+    """Get concise filedb help content (Level 1)."""
+    return """
 # FileDB Commands (aigon llmhelp files)
 
 FileDB stores versioned markdown files in the cloud.
@@ -599,12 +642,16 @@ For detailed help on a specific filedb command:
 
 Works for any filedb subcommand.
 """
-    print(help_text)
 
 
-def show_llm_help_event():
-    """Display concise event help for LLMs."""
-    help_text = """
+def show_llm_help_files():
+    """Display concise filedb help for LLMs."""
+    print(get_llm_help_content_files())
+
+
+def get_llm_help_content_event():
+    """Get concise event help content (Level 1)."""
+    return """
 # Event Commands (aigon llmhelp event)
 
 Event mode is for administering live events where participants submit notes.
@@ -713,12 +760,16 @@ For detailed help on a specific event command:
 
 Works for any event subcommand.
 """
-    print(help_text)
 
 
-def show_llm_help():
-    """Display brief LLM-friendly intro (Level 0)."""
-    help_text = """
+def show_llm_help_event():
+    """Display concise event help for LLMs."""
+    print(get_llm_help_content_event())
+
+
+def get_llm_help_content():
+    """Get brief LLM-friendly intro content (Level 0)."""
+    return """
 # Aigon CLI — Quick Reference
 
 ## Note References - IMPORTANT
@@ -759,4 +810,8 @@ Works for any command: aigon llmhelp <domain> <command>
 
   aigon <command> --help-argparse         # Full argparse help (all flags)
 """
-    print(help_text)
+
+
+def show_llm_help():
+    """Display brief LLM-friendly intro (Level 0)."""
+    print(get_llm_help_content())

@@ -12,18 +12,51 @@ import os
 import sys
 
 from .client import AigonClient
-from .config import get_api_token, get_api_url, handle_config_command, register_config_commands, set_config_path
+from .config import (
+    get_api_token,
+    get_api_url,
+    handle_config_command,
+    is_llm_mode_enabled,
+    register_config_commands,
+    set_config_path,
+)
 from .crypto import handle_crypto_command, register_crypto_commands
 from .download import handle_download_command, register_download_commands
 from .event import get_event_token, handle_event_command, register_event_commands
 from .filedb import handle_filedb_command, register_filedb_commands
 from .fileserver import handle_fileserver_command, register_fileserver_commands
-from .llm import handle_llm_command, register_llm_commands
+from .llm import get_help_for_command, handle_llm_command, register_llm_commands
 from .notetaker import handle_notetaker_command, register_notetaker_commands
 from .report import handle_report_command, register_report_commands
 from .search import handle_search_command, register_search_commands
 from .version import __date__, __version__
 from .vtt2md import handle_vtt2md_command, register_vtt2md_commands
+
+
+def extract_command_path_from_argv() -> str:
+    """Extract command path from sys.argv, ignoring flags.
+
+    Examples:
+        sys.argv = ['aigon', 'notetaker', 'read', '--help']
+        → returns "notetaker read"
+
+        sys.argv = ['aigon', 'llmhelp', 'notes']
+        → returns "llmhelp notes"
+
+        sys.argv = ['aigon', '--help']
+        → returns ""
+
+    Returns:
+        Space-separated command path, or empty string if none found
+    """
+    parts = []
+    for i in range(1, len(sys.argv)):
+        arg = sys.argv[i]
+        # Stop if we hit a flag
+        if arg.startswith("-"):
+            break
+        parts.append(arg)
+    return " ".join(parts)
 
 
 def create_client(base_url: str, token: str) -> AigonClient:
@@ -126,6 +159,27 @@ def main():
     subparsers.add_parser("coach", help="Coach agent commands (accepts: read, search, mark)", add_help=False)
     subparsers.add_parser("wellness", help="Wellness agent commands (accepts: read, search, mark)", add_help=False)
 
+    # Intercept --help / -h when llm_mode is enabled
+    if ("-h" in sys.argv or "--help" in sys.argv) and is_llm_mode_enabled():
+        # Extract command path from argv
+        command_path = extract_command_path_from_argv()
+
+        # Get help content (Level 0, 1, or 2 depending on command_path)
+        if command_path:
+            help_content = get_help_for_command(command_path)
+            if help_content:
+                print(help_content)
+                sys.exit(0)
+            else:
+                # Command not found in llmhelp, fall through to normal argparse flow
+                pass
+        else:
+            # No command, show Level 0 overview
+            from .llm import get_llm_help_content
+
+            print(get_llm_help_content())
+            sys.exit(0)
+
     # Parse arguments
     args = parser.parse_args()
 
@@ -159,7 +213,7 @@ def main():
         handle_fileserver_command(args)
         sys.exit(0)
 
-    if args.command == "llm":
+    if args.command in ("llmhelp", "llm"):
         handle_llm_command(args)
         sys.exit(0)
 

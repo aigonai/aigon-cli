@@ -192,6 +192,18 @@ def get_api_url() -> str:
     return env_url or config_url or "https://api.aigon.ai"
 
 
+def is_llm_mode_enabled() -> bool:
+    """Check if LLM mode is enabled in config.
+
+    LLM mode makes --help redirect to aigon llmhelp instead of argparse output.
+
+    Returns:
+        True if llm_mode is set to "true" (case-insensitive), False otherwise
+    """
+    llm_mode = get_config_value("llm", "mode")
+    return llm_mode is not None and llm_mode.lower() == "true"
+
+
 # ===== CLI Commands =====
 
 

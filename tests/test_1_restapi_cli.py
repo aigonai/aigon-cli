@@ -17,7 +17,9 @@ This test checks BOTH public API and internal implementation details (private me
 
 (c) Stefan LOESCH 2025-26. All rights reserved.
 """
+
 import inspect
+
 from aigon_cli.client import AigonClient
 from tests.utils.signature_test_helpers import assert_signatures_match
 
@@ -26,21 +28,38 @@ def test_aigon_client_signature():
     """Test that AigonClient has exactly the expected methods and properties."""
     # Expected public methods for Aigon client
     expected_public_methods = {
-        'create_file', 'delete_file', 'get_recent_notes',
-        'list_files', 'read_file', 'search_notes', 'search_files', 'write_file',
-        'global_search',
-        'get_api_info', 'get_health', 'list_endpoints',
-        'archive_file', 'unarchive_file',
-        'get_note_by_id', 'get_notes_by_ids', 'mark_notes', 'update_notes',
-        'get_attachment', 'get_attachment_by_unique_id', 'save_report',
-        'share_file', 'unshare_file', 'list_shared_files', 'list_files_i_shared',
-        'download_resource'
+        "create_file",
+        "delete_file",
+        "get_recent_notes",
+        "list_files",
+        "read_file",
+        "search_notes",
+        "search_files",
+        "write_file",
+        "global_search",
+        "get_api_info",
+        "get_health",
+        "list_endpoints",
+        "archive_file",
+        "unarchive_file",
+        "get_note_by_id",
+        "get_notes_by_ids",
+        "mark_notes",
+        "update_notes",
+        "get_attachment",
+        "get_attachment_by_unique_id",
+        "save_report",
+        "share_file",
+        "unshare_file",
+        "list_shared_files",
+        "list_files_i_shared",
+        "download_resource",
+        "mailbox_reply",
+        "mailbox_send",
     }
 
     # Expected private methods for Aigon client
-    expected_private_methods = {
-        '__init__', '_handle_auth_error'
-    }
+    expected_private_methods = {"__init__", "_handle_auth_error"}
 
     # Expected properties
     expected_public_properties = set()
@@ -57,12 +76,12 @@ def test_aigon_client_signature():
         is_property = isinstance(inspect.getattr_static(AigonClient, name), property)
 
         if is_method:
-            if name.startswith('_'):
+            if name.startswith("_"):
                 actual_private_methods.add(name)
             else:
                 actual_public_methods.add(name)
         elif is_property:
-            if name.startswith('_'):
+            if name.startswith("_"):
                 actual_private_properties.add(name)
             else:
                 actual_public_properties.add(name)

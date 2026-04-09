@@ -14,13 +14,13 @@ Test Coverage:
 (c) Stefan LOESCH 2025-26. All rights reserved.
 """
 
-import pytest
+import os
 import subprocess
 import time
-import requests
 from pathlib import Path
-import os
-import signal
+
+import pytest
+import requests
 
 
 @pytest.fixture
@@ -39,6 +39,7 @@ def test_markdown_dir(tmp_path):
 def find_pid_directory():
     """Find the PID directory used by fileserver.py."""
     import platform
+
     system = platform.system()
     home = Path.home()
 
@@ -72,15 +73,13 @@ def find_pid_directory():
 def cleanup_viewers():
     """Clean up any running viewers before and after each test."""
     # Kill all viewers before test
-    subprocess.run(['./aigon', 'viewer', 'kill'],
-                  capture_output=True, cwd='/Users/skloesch/claude/agent01')
+    subprocess.run(["./aigon", "viewer", "kill"], capture_output=True, cwd="/Users/skloesch/claude/agent01")
     time.sleep(1)
 
     yield
 
     # Kill all viewers after test
-    subprocess.run(['./aigon', 'viewer', 'kill'],
-                  capture_output=True, cwd='/Users/skloesch/claude/agent01')
+    subprocess.run(["./aigon", "viewer", "kill"], capture_output=True, cwd="/Users/skloesch/claude/agent01")
     time.sleep(1)
 
 
@@ -94,11 +93,11 @@ class TestViewerLaunch:
 
         # Launch viewer in background with --no-browser
         result = subprocess.run(
-            ['./aigon', 'viewer', 'launch', str(test_markdown_dir), '--no-browser', '--port', str(port)],
+            ["./aigon", "viewer", "launch", str(test_markdown_dir), "--no-browser", "--port", str(port)],
             capture_output=True,
             text=True,
-            cwd='/Users/skloesch/claude/agent01',
-            timeout=10
+            cwd="/Users/skloesch/claude/agent01",
+            timeout=10,
         )
 
         assert result.returncode == 0
@@ -106,12 +105,11 @@ class TestViewerLaunch:
 
         try:
             # Server should respond
-            response = requests.get(f'http://127.0.0.1:{port}/', timeout=5)
+            response = requests.get(f"http://127.0.0.1:{port}/", timeout=5)
             assert response.status_code == 200
         finally:
             # Cleanup
-            subprocess.run(['./aigon', 'viewer', 'kill', '--port', str(port)],
-                         cwd='/Users/skloesch/claude/agent01')
+            subprocess.run(["./aigon", "viewer", "kill", "--port", str(port)], cwd="/Users/skloesch/claude/agent01")
 
     def test_launch_foreground(self, test_markdown_dir):
         """Test viewer launch in foreground mode (will be killed after startup)."""
@@ -119,10 +117,10 @@ class TestViewerLaunch:
 
         # Launch in foreground (background process for test)
         proc = subprocess.Popen(
-            ['./aigon', 'viewer', 'launch', str(test_markdown_dir), '--foreground', '--port', str(port)],
+            ["./aigon", "viewer", "launch", str(test_markdown_dir), "--foreground", "--port", str(port)],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            cwd='/Users/skloesch/claude/agent01'
+            cwd="/Users/skloesch/claude/agent01",
         )
 
         # Give it time to start
@@ -130,7 +128,7 @@ class TestViewerLaunch:
 
         try:
             # Server should respond
-            response = requests.get(f'http://127.0.0.1:{port}/', timeout=5)
+            response = requests.get(f"http://127.0.0.1:{port}/", timeout=5)
             assert response.status_code == 200
         finally:
             # Kill the foreground process
@@ -142,22 +140,21 @@ class TestViewerLaunch:
         port = 9003
 
         result = subprocess.run(
-            ['./aigon', 'viewer', 'launch', str(test_markdown_dir), '--no-browser', '--port', str(port)],
+            ["./aigon", "viewer", "launch", str(test_markdown_dir), "--no-browser", "--port", str(port)],
             capture_output=True,
             text=True,
-            cwd='/Users/skloesch/claude/agent01',
-            timeout=10
+            cwd="/Users/skloesch/claude/agent01",
+            timeout=10,
         )
 
         assert result.returncode == 0
         time.sleep(2)
 
         try:
-            response = requests.get(f'http://127.0.0.1:{port}/', timeout=5)
+            response = requests.get(f"http://127.0.0.1:{port}/", timeout=5)
             assert response.status_code == 200
         finally:
-            subprocess.run(['./aigon', 'viewer', 'kill', '--port', str(port)],
-                         cwd='/Users/skloesch/claude/agent01')
+            subprocess.run(["./aigon", "viewer", "kill", "--port", str(port)], cwd="/Users/skloesch/claude/agent01")
 
     def test_launch_duplicate_port(self, test_markdown_dir):
         """Test launching viewer on already-used port."""
@@ -165,11 +162,11 @@ class TestViewerLaunch:
 
         # Launch first viewer
         result1 = subprocess.run(
-            ['./aigon', 'viewer', 'launch', str(test_markdown_dir), '--no-browser', '--port', str(port)],
+            ["./aigon", "viewer", "launch", str(test_markdown_dir), "--no-browser", "--port", str(port)],
             capture_output=True,
             text=True,
-            cwd='/Users/skloesch/claude/agent01',
-            timeout=10
+            cwd="/Users/skloesch/claude/agent01",
+            timeout=10,
         )
         assert result1.returncode == 0
         time.sleep(2)
@@ -177,11 +174,11 @@ class TestViewerLaunch:
         try:
             # Try to launch second viewer on same port - should find next available port
             result2 = subprocess.run(
-                ['./aigon', 'viewer', 'launch', str(test_markdown_dir), '--no-browser', '--port', str(port)],
+                ["./aigon", "viewer", "launch", str(test_markdown_dir), "--no-browser", "--port", str(port)],
                 capture_output=True,
                 text=True,
-                cwd='/Users/skloesch/claude/agent01',
-                timeout=10
+                cwd="/Users/skloesch/claude/agent01",
+                timeout=10,
             )
 
             # Should succeed and use next available port
@@ -189,8 +186,7 @@ class TestViewerLaunch:
             assert "in use, using port" in result2.stdout.lower()
 
         finally:
-            subprocess.run(['./aigon', 'viewer', 'kill'],
-                         cwd='/Users/skloesch/claude/agent01')
+            subprocess.run(["./aigon", "viewer", "kill"], cwd="/Users/skloesch/claude/agent01")
 
 
 @pytest.mark.skip(reason="Too slow")
@@ -200,10 +196,7 @@ class TestViewerStatus:
     def test_status_no_viewers(self):
         """Test status when no viewers are running."""
         result = subprocess.run(
-            ['./aigon', 'viewer', 'status'],
-            capture_output=True,
-            text=True,
-            cwd='/Users/skloesch/claude/agent01'
+            ["./aigon", "viewer", "status"], capture_output=True, text=True, cwd="/Users/skloesch/claude/agent01"
         )
 
         # Should succeed but indicate no viewers
@@ -215,20 +208,17 @@ class TestViewerStatus:
 
         # Launch viewer
         subprocess.run(
-            ['./aigon', 'viewer', 'launch', str(test_markdown_dir), '--no-browser', '--port', str(port)],
+            ["./aigon", "viewer", "launch", str(test_markdown_dir), "--no-browser", "--port", str(port)],
             capture_output=True,
-            cwd='/Users/skloesch/claude/agent01',
-            timeout=10
+            cwd="/Users/skloesch/claude/agent01",
+            timeout=10,
         )
         time.sleep(2)
 
         try:
             # Check status
             result = subprocess.run(
-                ['./aigon', 'viewer', 'status'],
-                capture_output=True,
-                text=True,
-                cwd='/Users/skloesch/claude/agent01'
+                ["./aigon", "viewer", "status"], capture_output=True, text=True, cwd="/Users/skloesch/claude/agent01"
             )
 
             assert result.returncode == 0
@@ -236,8 +226,7 @@ class TestViewerStatus:
             assert "viewer" in result.stdout.lower()
 
         finally:
-            subprocess.run(['./aigon', 'viewer', 'kill', '--port', str(port)],
-                         cwd='/Users/skloesch/claude/agent01')
+            subprocess.run(["./aigon", "viewer", "kill", "--port", str(port)], cwd="/Users/skloesch/claude/agent01")
 
     def test_status_multiple_viewers(self, test_markdown_dir):
         """Test status with multiple viewers running."""
@@ -246,20 +235,17 @@ class TestViewerStatus:
         # Launch multiple viewers
         for port in ports:
             subprocess.run(
-                ['./aigon', 'viewer', 'launch', str(test_markdown_dir), '--no-browser', '--port', str(port)],
+                ["./aigon", "viewer", "launch", str(test_markdown_dir), "--no-browser", "--port", str(port)],
                 capture_output=True,
-                cwd='/Users/skloesch/claude/agent01',
-                timeout=10
+                cwd="/Users/skloesch/claude/agent01",
+                timeout=10,
             )
             time.sleep(2)
 
         try:
             # Check status
             result = subprocess.run(
-                ['./aigon', 'viewer', 'status'],
-                capture_output=True,
-                text=True,
-                cwd='/Users/skloesch/claude/agent01'
+                ["./aigon", "viewer", "status"], capture_output=True, text=True, cwd="/Users/skloesch/claude/agent01"
             )
 
             assert result.returncode == 0
@@ -268,8 +254,7 @@ class TestViewerStatus:
                 assert str(port) in result.stdout
 
         finally:
-            subprocess.run(['./aigon', 'viewer', 'kill'],
-                         cwd='/Users/skloesch/claude/agent01')
+            subprocess.run(["./aigon", "viewer", "kill"], cwd="/Users/skloesch/claude/agent01")
 
 
 @pytest.mark.skip(reason="Too slow")
@@ -282,23 +267,23 @@ class TestViewerKill:
 
         # Launch viewer
         subprocess.run(
-            ['./aigon', 'viewer', 'launch', str(test_markdown_dir), '--no-browser', '--port', str(port)],
+            ["./aigon", "viewer", "launch", str(test_markdown_dir), "--no-browser", "--port", str(port)],
             capture_output=True,
-            cwd='/Users/skloesch/claude/agent01',
-            timeout=10
+            cwd="/Users/skloesch/claude/agent01",
+            timeout=10,
         )
         time.sleep(2)
 
         # Verify it's running
-        response = requests.get(f'http://127.0.0.1:{port}/', timeout=5)
+        response = requests.get(f"http://127.0.0.1:{port}/", timeout=5)
         assert response.status_code == 200
 
         # Kill it
         result = subprocess.run(
-            ['./aigon', 'viewer', 'kill', '--port', str(port)],
+            ["./aigon", "viewer", "kill", "--port", str(port)],
             capture_output=True,
             text=True,
-            cwd='/Users/skloesch/claude/agent01'
+            cwd="/Users/skloesch/claude/agent01",
         )
 
         assert result.returncode == 0
@@ -306,7 +291,7 @@ class TestViewerKill:
 
         # Verify it's stopped (connection should fail)
         with pytest.raises(requests.ConnectionError):
-            requests.get(f'http://127.0.0.1:{port}/', timeout=2)
+            requests.get(f"http://127.0.0.1:{port}/", timeout=2)
 
     @pytest.mark.skip(reason="Timeout issues with port cleanup")
     def test_kill_all_viewers(self, test_markdown_dir):
@@ -316,24 +301,21 @@ class TestViewerKill:
         # Launch multiple viewers
         for port in ports:
             subprocess.run(
-                ['./aigon', 'viewer', 'launch', str(test_markdown_dir), '--no-browser', '--port', str(port)],
+                ["./aigon", "viewer", "launch", str(test_markdown_dir), "--no-browser", "--port", str(port)],
                 capture_output=True,
-                cwd='/Users/skloesch/claude/agent01',
-                timeout=10
+                cwd="/Users/skloesch/claude/agent01",
+                timeout=10,
             )
             time.sleep(2)
 
         # Verify they're running
         for port in ports:
-            response = requests.get(f'http://127.0.0.1:{port}/', timeout=5)
+            response = requests.get(f"http://127.0.0.1:{port}/", timeout=5)
             assert response.status_code == 200
 
         # Kill all
         result = subprocess.run(
-            ['./aigon', 'viewer', 'kill'],
-            capture_output=True,
-            text=True,
-            cwd='/Users/skloesch/claude/agent01'
+            ["./aigon", "viewer", "kill"], capture_output=True, text=True, cwd="/Users/skloesch/claude/agent01"
         )
 
         assert result.returncode == 0
@@ -342,17 +324,17 @@ class TestViewerKill:
         # Verify all stopped
         for port in ports:
             with pytest.raises(requests.ConnectionError):
-                requests.get(f'http://127.0.0.1:{port}/', timeout=2)
+                requests.get(f"http://127.0.0.1:{port}/", timeout=2)
 
     def test_kill_nonexistent_viewer(self):
         """Test killing viewer that doesn't exist."""
         port = 9999
 
         result = subprocess.run(
-            ['./aigon', 'viewer', 'kill', '--port', str(port)],
+            ["./aigon", "viewer", "kill", "--port", str(port)],
             capture_output=True,
             text=True,
-            cwd='/Users/skloesch/claude/agent01'
+            cwd="/Users/skloesch/claude/agent01",
         )
 
         # Should either succeed with message or fail gracefully
@@ -376,10 +358,10 @@ class TestPIDFileManagement:
 
         # Launch viewer in background
         subprocess.run(
-            ['./aigon', 'viewer', 'launch', str(test_markdown_dir), '--no-browser', '--port', str(port)],
+            ["./aigon", "viewer", "launch", str(test_markdown_dir), "--no-browser", "--port", str(port)],
             capture_output=True,
-            cwd='/Users/skloesch/claude/agent01',
-            timeout=10
+            cwd="/Users/skloesch/claude/agent01",
+            timeout=10,
         )
         time.sleep(2)
 
@@ -395,8 +377,7 @@ class TestPIDFileManagement:
             os.kill(pid, 0)  # Signal 0 checks if process exists
 
         finally:
-            subprocess.run(['./aigon', 'viewer', 'kill', '--port', str(port)],
-                         cwd='/Users/skloesch/claude/agent01')
+            subprocess.run(["./aigon", "viewer", "kill", "--port", str(port)], cwd="/Users/skloesch/claude/agent01")
 
     @pytest.mark.skip(reason="Timeout issues with port cleanup")
     def test_pid_file_cleaned_up(self, test_markdown_dir, find_pid_directory):
@@ -407,10 +388,10 @@ class TestPIDFileManagement:
 
         # Launch viewer
         subprocess.run(
-            ['./aigon', 'viewer', 'launch', str(test_markdown_dir), '--no-browser', '--port', str(port)],
+            ["./aigon", "viewer", "launch", str(test_markdown_dir), "--no-browser", "--port", str(port)],
             capture_output=True,
-            cwd='/Users/skloesch/claude/agent01',
-            timeout=10
+            cwd="/Users/skloesch/claude/agent01",
+            timeout=10,
         )
         time.sleep(2)
 
@@ -419,9 +400,9 @@ class TestPIDFileManagement:
 
         # Kill viewer
         subprocess.run(
-            ['./aigon', 'viewer', 'kill', '--port', str(port)],
+            ["./aigon", "viewer", "kill", "--port", str(port)],
             capture_output=True,
-            cwd='/Users/skloesch/claude/agent01'
+            cwd="/Users/skloesch/claude/agent01",
         )
         time.sleep(2)
 
@@ -439,22 +420,21 @@ class TestServerResponsiveness:
 
         # Launch viewer
         subprocess.run(
-            ['./aigon', 'viewer', 'launch', str(test_markdown_dir), '--no-browser', '--port', str(port)],
+            ["./aigon", "viewer", "launch", str(test_markdown_dir), "--no-browser", "--port", str(port)],
             capture_output=True,
-            cwd='/Users/skloesch/claude/agent01',
-            timeout=10
+            cwd="/Users/skloesch/claude/agent01",
+            timeout=10,
         )
         time.sleep(2)
 
         try:
             # Get index page
-            response = requests.get(f'http://127.0.0.1:{port}/', timeout=5)
+            response = requests.get(f"http://127.0.0.1:{port}/", timeout=5)
             assert response.status_code == 200
-            assert 'test1' in response.text.lower() or 'markdown' in response.text.lower()
+            assert "test1" in response.text.lower() or "markdown" in response.text.lower()
 
             # Try to view a file (if viewer supports it)
             # This may vary based on viewer implementation
 
         finally:
-            subprocess.run(['./aigon', 'viewer', 'kill', '--port', str(port)],
-                         cwd='/Users/skloesch/claude/agent01')
+            subprocess.run(["./aigon", "viewer", "kill", "--port", str(port)], cwd="/Users/skloesch/claude/agent01")

@@ -11,6 +11,7 @@ from typing import Optional, Union
 # Try to import zoneinfo (Python 3.9+)
 try:
     from zoneinfo import ZoneInfo
+
     ZONEINFO_AVAILABLE = True
 except ImportError:
     ZoneInfo = None
@@ -18,64 +19,64 @@ except ImportError:
 
 # Common timezone abbreviations mapped to IANA names
 TZ_ALIASES = {
-    'UTC': 'UTC',
-    'GMT': 'Etc/GMT',
-    'CET': 'Europe/Paris',
-    'CEST': 'Europe/Paris',
-    'WET': 'Europe/Lisbon',
-    'WEST': 'Europe/Lisbon',
-    'EET': 'Europe/Helsinki',
-    'EEST': 'Europe/Helsinki',
-    'EST': 'America/New_York',
-    'EDT': 'America/New_York',
-    'CST': 'America/Chicago',
-    'CDT': 'America/Chicago',
-    'MST': 'America/Denver',
-    'MDT': 'America/Denver',
-    'PST': 'America/Los_Angeles',
-    'PDT': 'America/Los_Angeles',
-    'JST': 'Asia/Tokyo',
-    'IST': 'Asia/Kolkata',
-    'SGT': 'Asia/Singapore',
-    'HKT': 'Asia/Hong_Kong',
-    'AEST': 'Australia/Sydney',
-    'AEDT': 'Australia/Sydney',
-    'AWST': 'Australia/Perth',
-    'NZST': 'Pacific/Auckland',
-    'NZDT': 'Pacific/Auckland',
+    "UTC": "UTC",
+    "GMT": "Etc/GMT",
+    "CET": "Europe/Paris",
+    "CEST": "Europe/Paris",
+    "WET": "Europe/Lisbon",
+    "WEST": "Europe/Lisbon",
+    "EET": "Europe/Helsinki",
+    "EEST": "Europe/Helsinki",
+    "EST": "America/New_York",
+    "EDT": "America/New_York",
+    "CST": "America/Chicago",
+    "CDT": "America/Chicago",
+    "MST": "America/Denver",
+    "MDT": "America/Denver",
+    "PST": "America/Los_Angeles",
+    "PDT": "America/Los_Angeles",
+    "JST": "Asia/Tokyo",
+    "IST": "Asia/Kolkata",
+    "SGT": "Asia/Singapore",
+    "HKT": "Asia/Hong_Kong",
+    "AEST": "Australia/Sydney",
+    "AEDT": "Australia/Sydney",
+    "AWST": "Australia/Perth",
+    "NZST": "Pacific/Auckland",
+    "NZDT": "Pacific/Auckland",
 }
 
 # Fixed UTC offsets for common abbreviations (fallback if zoneinfo unavailable)
 TZ_OFFSETS = {
-    'UTC': 0,
-    'GMT': 0,
-    'CET': 1,
-    'CEST': 2,
-    'WET': 0,
-    'WEST': 1,
-    'EET': 2,
-    'EEST': 3,
-    'EST': -5,
-    'EDT': -4,
-    'CST': -6,
-    'CDT': -5,
-    'MST': -7,
-    'MDT': -6,
-    'PST': -8,
-    'PDT': -7,
-    'JST': 9,
-    'IST': 5.5,
-    'SGT': 8,
-    'HKT': 8,
-    'AEST': 10,
-    'AEDT': 11,
-    'AWST': 8,
-    'NZST': 12,
-    'NZDT': 13,
+    "UTC": 0,
+    "GMT": 0,
+    "CET": 1,
+    "CEST": 2,
+    "WET": 0,
+    "WEST": 1,
+    "EET": 2,
+    "EEST": 3,
+    "EST": -5,
+    "EDT": -4,
+    "CST": -6,
+    "CDT": -5,
+    "MST": -7,
+    "MDT": -6,
+    "PST": -8,
+    "PDT": -7,
+    "JST": 9,
+    "IST": 5.5,
+    "SGT": 8,
+    "HKT": 8,
+    "AEST": 10,
+    "AEDT": 11,
+    "AWST": 8,
+    "NZST": 12,
+    "NZDT": 13,
 }
 
 
-def get_timezone(tz_str: str) -> Optional[Union['ZoneInfo', timezone]]:
+def get_timezone(tz_str: str) -> Optional[Union["ZoneInfo", timezone]]:
     """Get timezone from string.
 
     Supports:
@@ -151,7 +152,7 @@ def parse_time(time_str: str, base_date: datetime = None) -> datetime:
     parts = time_str.split()
     if len(parts) >= 2:
         time_part = parts[0]
-        tz_part = ' '.join(parts[1:])
+        tz_part = " ".join(parts[1:])
         parsed_tz = get_timezone(tz_part)
         if parsed_tz is None:
             raise ValueError(f"Unknown timezone: {tz_part}")
@@ -160,7 +161,7 @@ def parse_time(time_str: str, base_date: datetime = None) -> datetime:
         time_part = time_str
 
     # Parse time component
-    time_parts = time_part.split(':')
+    time_parts = time_part.split(":")
     if not time_parts:
         raise ValueError(f"Invalid time format: {time_str}")
 
@@ -176,11 +177,7 @@ def parse_time(time_str: str, base_date: datetime = None) -> datetime:
 
     # Create datetime in the specified timezone
     # Use base_date for year/month/day, but specified timezone
-    local_dt = datetime(
-        base_date.year, base_date.month, base_date.day,
-        hour, minute, second,
-        tzinfo=tz
-    )
+    local_dt = datetime(base_date.year, base_date.month, base_date.day, hour, minute, second, tzinfo=tz)
 
     # Convert to UTC
     return local_dt.astimezone(timezone.utc)
@@ -200,24 +197,24 @@ def parse_time_range(time_range: str, base_date: datetime = None) -> tuple:
     Returns:
         (start_ts, end_ts) tuple of Unix timestamps
     """
-    if '-' not in time_range:
+    if "-" not in time_range:
         raise ValueError(f"Invalid time range format: {time_range}. Expected HH:MM-HH:MM")
 
     # Handle timezone at the end
     parts = time_range.strip().split()
-    tz_suffix = ''
+    tz_suffix = ""
     if len(parts) >= 2:
         # Last part might be timezone
         range_part = parts[0]
-        tz_suffix = ' ' + ' '.join(parts[1:])
+        tz_suffix = " " + " ".join(parts[1:])
     else:
         range_part = time_range.strip()
 
     # Split the range
-    if '-' not in range_part:
+    if "-" not in range_part:
         raise ValueError(f"Invalid time range format: {time_range}")
 
-    start_str, end_str = range_part.split('-', 1)
+    start_str, end_str = range_part.split("-", 1)
 
     # Add timezone suffix to both times
     start_dt = parse_time(start_str + tz_suffix, base_date)

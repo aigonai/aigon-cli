@@ -14,9 +14,10 @@ def register_llm_commands(subparsers):
     Args:
         subparsers: Argument parser subparsers object
     """
-    llm_parser = subparsers.add_parser('llm', help='LLM-friendly command reference')
-    llm_parser.add_argument('topic', nargs='*', default=[],
-                            help='Topic: notes/notetaker, files/filedb, or omit for full reference')
+    llm_parser = subparsers.add_parser("llm", help="LLM-friendly command reference")
+    llm_parser.add_argument(
+        "topic", nargs="*", default=[], help="Topic: notes/notetaker, files/filedb, or omit for full reference"
+    )
 
 
 def handle_llm_command(args):
@@ -25,17 +26,17 @@ def handle_llm_command(args):
     Args:
         args: Parsed command-line arguments
     """
-    topics = getattr(args, 'topic', []) or []
+    topics = getattr(args, "topic", []) or []
     # Filter out 'help' - it's just noise
-    topics = [t for t in topics if t != 'help']
+    topics = [t for t in topics if t != "help"]
 
     if not topics:
         show_llm_help()
-    elif any(t in ('notes', 'notetaker') for t in topics):
+    elif any(t in ("notes", "notetaker") for t in topics):
         show_llm_help_notes()
-    elif any(t in ('files', 'filedb') for t in topics):
+    elif any(t in ("files", "filedb") for t in topics):
         show_llm_help_files()
-    elif any(t in ('event', 'events') for t in topics):
+    elif any(t in ("event", "events") for t in topics):
         show_llm_help_event()
     else:
         print(f"Unknown topic: {' '.join(topics)}", file=sys.stderr)

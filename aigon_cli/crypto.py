@@ -50,7 +50,7 @@ def save_config(config: configparser.ConfigParser) -> None:
     Args:
         config: ConfigParser to save
     """
-    with open(CONFIG_PATH, 'w') as f:
+    with open(CONFIG_PATH, "w") as f:
         config.write(f)
 
 
@@ -61,8 +61,8 @@ def get_config_key() -> Optional[str]:
         Base64-encoded key or None if not set
     """
     config = load_config()
-    if config.has_option('encryption', 'key'):
-        return config.get('encryption', 'key')
+    if config.has_option("encryption", "key"):
+        return config.get("encryption", "key")
     return None
 
 
@@ -81,22 +81,18 @@ def get_config_backend() -> str:
     system = platform.system()
 
     # Platform-specific override keys
-    override_key = {
-        'Darwin': 'backend_mac',
-        'Linux': 'backend_linux',
-        'Windows': 'backend_win'
-    }.get(system)
+    override_key = {"Darwin": "backend_mac", "Linux": "backend_linux", "Windows": "backend_win"}.get(system)
 
     # Check platform-specific first
-    if override_key and config.has_option('encryption', override_key):
-        return config.get('encryption', override_key)
+    if override_key and config.has_option("encryption", override_key):
+        return config.get("encryption", override_key)
 
     # Fall back to global
-    if config.has_option('encryption', 'backend'):
-        return config.get('encryption', 'backend')
+    if config.has_option("encryption", "backend"):
+        return config.get("encryption", "backend")
 
     # Default
-    return 'auto'
+    return "auto"
 
 
 def get_platform_info() -> dict:
@@ -106,12 +102,12 @@ def get_platform_info() -> dict:
         Dictionary with platform details
     """
     return {
-        'system': platform.system(),  # Darwin, Linux, Windows
-        'release': platform.release(),
-        'machine': platform.machine(),
-        'python_version': platform.python_version(),
-        'openssl_available': shutil.which('openssl') is not None,
-        'powershell_available': shutil.which('powershell') is not None or shutil.which('pwsh') is not None,
+        "system": platform.system(),  # Darwin, Linux, Windows
+        "release": platform.release(),
+        "machine": platform.machine(),
+        "python_version": platform.python_version(),
+        "openssl_available": shutil.which("openssl") is not None,
+        "powershell_available": shutil.which("powershell") is not None or shutil.which("pwsh") is not None,
     }
 
 
@@ -129,7 +125,7 @@ def derive_key(password: str, salt: Optional[bytes] = None) -> Tuple[bytes, byte
         salt = os.urandom(16)
 
     # PBKDF2 with SHA-256, 100k iterations
-    key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
+    key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100000)
     return key, salt
 
 
@@ -148,9 +144,9 @@ def _encrypt_openssl(plaintext: bytes, key: bytes, iv: bytes) -> bytes:
     iv_hex = iv.hex()
 
     proc = subprocess.run(
-        ['openssl', 'enc', '-aes-256-cbc', '-K', key_hex, '-iv', iv_hex, '-nosalt'],
+        ["openssl", "enc", "-aes-256-cbc", "-K", key_hex, "-iv", iv_hex, "-nosalt"],
         input=plaintext,
-        capture_output=True
+        capture_output=True,
     )
 
     if proc.returncode != 0:
@@ -174,9 +170,9 @@ def _decrypt_openssl(ciphertext: bytes, key: bytes, iv: bytes) -> bytes:
     iv_hex = iv.hex()
 
     proc = subprocess.run(
-        ['openssl', 'enc', '-aes-256-cbc', '-d', '-K', key_hex, '-iv', iv_hex, '-nosalt'],
+        ["openssl", "enc", "-aes-256-cbc", "-d", "-K", key_hex, "-iv", iv_hex, "-nosalt"],
         input=ciphertext,
-        capture_output=True
+        capture_output=True,
     )
 
     if proc.returncode != 0:
@@ -216,12 +212,8 @@ $ciphertext = $encryptor.TransformFinalBlock($plaintext, 0, $plaintext.Length)
 [Convert]::ToBase64String($ciphertext)
 '''
 
-    pwsh = shutil.which('pwsh') or shutil.which('powershell')
-    proc = subprocess.run(
-        [pwsh, '-Command', script],
-        capture_output=True,
-        text=True
-    )
+    pwsh = shutil.which("pwsh") or shutil.which("powershell")
+    proc = subprocess.run([pwsh, "-Command", script], capture_output=True, text=True)
 
     if proc.returncode != 0:
         raise RuntimeError(f"PowerShell encryption failed: {proc.stderr}")
@@ -260,12 +252,8 @@ $plaintext = $decryptor.TransformFinalBlock($ciphertext, 0, $ciphertext.Length)
 [Convert]::ToBase64String($plaintext)
 '''
 
-    pwsh = shutil.which('pwsh') or shutil.which('powershell')
-    proc = subprocess.run(
-        [pwsh, '-Command', script],
-        capture_output=True,
-        text=True
-    )
+    pwsh = shutil.which("pwsh") or shutil.which("powershell")
+    proc = subprocess.run([pwsh, "-Command", script], capture_output=True, text=True)
 
     if proc.returncode != 0:
         raise RuntimeError(f"PowerShell decryption failed: {proc.stderr}")
@@ -350,12 +338,12 @@ def select_backend(requested: str = "auto") -> str:
     info = get_platform_info()
 
     if requested == "openssl":
-        if not info['openssl_available']:
+        if not info["openssl_available"]:
             raise RuntimeError("OpenSSL not available on this system")
         return "openssl"
 
     if requested == "powershell":
-        if not info['powershell_available']:
+        if not info["powershell_available"]:
             raise RuntimeError("PowerShell not available on this system")
         return "powershell"
 
@@ -363,23 +351,23 @@ def select_backend(requested: str = "auto") -> str:
         return "vendored"
 
     if requested == "native":
-        if info['system'] == 'Windows':
-            if info['powershell_available']:
+        if info["system"] == "Windows":
+            if info["powershell_available"]:
                 return "powershell"
             raise RuntimeError("PowerShell not available on Windows")
         else:
-            if info['openssl_available']:
+            if info["openssl_available"]:
                 return "openssl"
             raise RuntimeError("OpenSSL not available on this system")
 
     # Auto selection
     if requested == "auto":
-        if info['system'] == 'Windows':
-            if info['powershell_available']:
+        if info["system"] == "Windows":
+            if info["powershell_available"]:
                 return "powershell"
             return "vendored"
         else:
-            if info['openssl_available']:
+            if info["openssl_available"]:
                 return "openssl"
             return "vendored"
 
@@ -470,31 +458,31 @@ def test_backend(backend: str) -> dict:
     password = "test_password_123"
 
     result = {
-        'backend': backend,
-        'available': False,
-        'error': None,
-        'encrypt_time_ms': None,
-        'decrypt_time_ms': None,
-        'roundtrip_success': False
+        "backend": backend,
+        "available": False,
+        "error": None,
+        "encrypt_time_ms": None,
+        "decrypt_time_ms": None,
+        "roundtrip_success": False,
     }
 
     try:
         # Test encryption
         start = time.time()
         encrypted = encrypt(test_data, password, backend)
-        result['encrypt_time_ms'] = round((time.time() - start) * 1000, 2)
+        result["encrypt_time_ms"] = round((time.time() - start) * 1000, 2)
 
         # Test decryption
         start = time.time()
         decrypted = decrypt(encrypted, password, backend)
-        result['decrypt_time_ms'] = round((time.time() - start) * 1000, 2)
+        result["decrypt_time_ms"] = round((time.time() - start) * 1000, 2)
 
         # Verify roundtrip
-        result['roundtrip_success'] = (decrypted == test_data)
-        result['available'] = True
+        result["roundtrip_success"] = decrypted == test_data
+        result["available"] = True
 
     except Exception as e:
-        result['error'] = str(e)
+        result["error"] = str(e)
 
     return result
 
@@ -513,14 +501,14 @@ def show_settings() -> None:
     # Config values
     config = load_config()
     print("\nConfig Values:")
-    if config.has_section('encryption'):
-        for key, value in config.items('encryption'):
-            if key == 'key':
+    if config.has_section("encryption"):
+        for key, value in config.items("encryption"):
+            if key == "key":
                 # Mask the key, show only first/last 4 chars
                 if len(value) > 12:
-                    masked = value[:4] + '...' + value[-4:]
+                    masked = value[:4] + "..." + value[-4:]
                 else:
-                    masked = '***'
+                    masked = "***"
                 print(f"  {key} = {masked}")
             else:
                 print(f"  {key} = {value}")
@@ -548,6 +536,7 @@ def show_settings() -> None:
     vendored_available = False
     try:
         from .vendored import pyaes  # noqa: F401
+
         vendored_available = True
     except ImportError:
         pass
@@ -581,7 +570,7 @@ def cmd_encrypt(text: Optional[str] = None) -> None:
         text = sys.stdin.read()
 
     try:
-        plaintext = text.encode('utf-8')
+        plaintext = text.encode("utf-8")
         encrypted = encrypt(plaintext, key, backend_setting)
         actual_backend = select_backend(backend_setting)
 
@@ -622,7 +611,7 @@ def cmd_decrypt(ciphertext: Optional[str] = None) -> None:
         actual_backend = select_backend(backend_setting)
 
         # Output plaintext to stdout
-        print(decrypted.decode('utf-8'))
+        print(decrypted.decode("utf-8"))
 
         # Info to stderr
         print(f"[Backend: {actual_backend}, {len(encrypted)} bytes -> {len(decrypted)} bytes]", file=sys.stderr)
@@ -675,15 +664,15 @@ def cmd_keygen(override: bool = False) -> None:
     new_key = base64.b64encode(new_key_bytes).decode()
 
     # Ensure encryption section exists
-    if not config.has_section('encryption'):
-        config.add_section('encryption')
+    if not config.has_section("encryption"):
+        config.add_section("encryption")
 
     # Save key
-    config.set('encryption', 'key', new_key)
+    config.set("encryption", "key", new_key)
 
     # Set default backend if not set
-    if not config.has_option('encryption', 'backend'):
-        config.set('encryption', 'backend', 'auto')
+    if not config.has_option("encryption", "backend"):
+        config.set("encryption", "backend", "auto")
 
     save_config(config)
 
@@ -715,32 +704,33 @@ def register_crypto_commands(subparsers):
         subparsers: argparse subparsers object
     """
     # Crypto command group
-    crypto_parser = subparsers.add_parser('crypto', help='Encryption testing and settings')
-    crypto_subparsers = crypto_parser.add_subparsers(dest='crypto_command', help='Crypto commands')
+    crypto_parser = subparsers.add_parser("crypto", help="Encryption testing and settings")
+    crypto_subparsers = crypto_parser.add_subparsers(dest="crypto_command", help="Crypto commands")
 
     # Settings command
-    crypto_subparsers.add_parser('settings', help='Show encryption settings and config')
+    crypto_subparsers.add_parser("settings", help="Show encryption settings and config")
 
     # Keygen command
-    keygen_parser = crypto_subparsers.add_parser('keygen', help='Generate encryption key')
-    keygen_parser.add_argument('--override', action='store_true',
-                               help='Override existing key (DANGEROUS - prints old key)')
+    keygen_parser = crypto_subparsers.add_parser("keygen", help="Generate encryption key")
+    keygen_parser.add_argument(
+        "--override", action="store_true", help="Override existing key (DANGEROUS - prints old key)"
+    )
 
     # Encrypt command
-    encrypt_parser = crypto_subparsers.add_parser('encrypt', help='Encrypt text (uses config key/backend)')
-    encrypt_parser.add_argument('text', nargs='?', default=None,
-                               help='Text to encrypt (reads stdin if not provided)')
+    encrypt_parser = crypto_subparsers.add_parser("encrypt", help="Encrypt text (uses config key/backend)")
+    encrypt_parser.add_argument("text", nargs="?", default=None, help="Text to encrypt (reads stdin if not provided)")
 
     # Decrypt command
-    decrypt_parser = crypto_subparsers.add_parser('decrypt', help='Decrypt text (uses config key/backend)')
-    decrypt_parser.add_argument('ciphertext', nargs='?', default=None,
-                               help='Base64 ciphertext to decrypt (reads stdin if not provided)')
+    decrypt_parser = crypto_subparsers.add_parser("decrypt", help="Decrypt text (uses config key/backend)")
+    decrypt_parser.add_argument(
+        "ciphertext", nargs="?", default=None, help="Base64 ciphertext to decrypt (reads stdin if not provided)"
+    )
 
     # Test command
-    crypto_subparsers.add_parser('test', help='Test encryption roundtrip with config')
+    crypto_subparsers.add_parser("test", help="Test encryption roundtrip with config")
 
     # Help command
-    crypto_subparsers.add_parser('help', help='Show crypto help information')
+    crypto_subparsers.add_parser("help", help="Show crypto help information")
 
 
 def handle_crypto_command(args):
@@ -749,20 +739,19 @@ def handle_crypto_command(args):
     Args:
         args: Parsed command-line arguments
     """
-    if args.crypto_command == 'settings':
+    if args.crypto_command == "settings":
         show_settings()
 
-    elif args.crypto_command == 'keygen':
+    elif args.crypto_command == "keygen":
         cmd_keygen(override=args.override)
 
-    elif args.crypto_command == 'encrypt':
+    elif args.crypto_command == "encrypt":
         cmd_encrypt(text=args.text)
 
-    elif args.crypto_command == 'decrypt':
+    elif args.crypto_command == "decrypt":
         cmd_decrypt(ciphertext=args.ciphertext)
 
-    elif args.crypto_command == 'test':
-
+    elif args.crypto_command == "test":
         # Test data - 1MB for meaningful throughput measurement
         test_size_mb = 1.0
         test_size_bytes = int(test_size_mb * 1024 * 1024)
@@ -781,15 +770,16 @@ def handle_crypto_command(args):
         info = get_platform_info()
         backends_to_test = []
 
-        if info['openssl_available']:
-            backends_to_test.append(('openssl', 'OpenSSL CLI'))
-        if info['powershell_available']:
-            backends_to_test.append(('powershell', 'PowerShell/.NET'))
+        if info["openssl_available"]:
+            backends_to_test.append(("openssl", "OpenSSL CLI"))
+        if info["powershell_available"]:
+            backends_to_test.append(("powershell", "PowerShell/.NET"))
 
         # Check vendored
         try:
             from .vendored import pyaes  # noqa: F401
-            backends_to_test.append(('vendored', 'Vendored (pyaes)'))
+
+            backends_to_test.append(("vendored", "Vendored (pyaes)"))
         except ImportError:
             pass
 
@@ -823,8 +813,8 @@ def handle_crypto_command(args):
                 if decrypted == test_data:
                     status = "PASS"
                     print(f"  Status:  {status}")
-                    print(f"  Encrypt: {encrypt_mbps:7.2f} MB/s ({encrypt_sec*1000:6.1f} ms)")
-                    print(f"  Decrypt: {decrypt_mbps:7.2f} MB/s ({decrypt_sec*1000:6.1f} ms)")
+                    print(f"  Encrypt: {encrypt_mbps:7.2f} MB/s ({encrypt_sec * 1000:6.1f} ms)")
+                    print(f"  Decrypt: {decrypt_mbps:7.2f} MB/s ({decrypt_sec * 1000:6.1f} ms)")
                     results.append((backend_name, encrypt_mbps, decrypt_mbps, True))
                 else:
                     status = "FAIL (data mismatch)"
@@ -863,7 +853,7 @@ def handle_crypto_command(args):
             print("Some backends: FAIL")
             sys.exit(1)
 
-    elif args.crypto_command == 'help' or args.crypto_command is None:
+    elif args.crypto_command == "help" or args.crypto_command is None:
         print("Crypto Help - Encryption using ~/.aigon config")
         print()
         print("Commands:")

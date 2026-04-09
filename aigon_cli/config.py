@@ -79,7 +79,7 @@ def save_config(config: configparser.ConfigParser) -> None:
         config: ConfigParser instance to save
     """
     config_path = get_config_path()
-    with open(config_path, 'w') as f:
+    with open(config_path, "w") as f:
         config.write(f)
 
 
@@ -152,7 +152,7 @@ def get_api_token() -> Optional[str]:
         SystemExit: If env and config both exist with different values
     """
     env_token = os.getenv("AIGON_API_TOKEN")
-    config_token = get_config_value('api', 'token')
+    config_token = get_config_value("api", "token")
 
     if env_token and config_token:
         if env_token != config_token:
@@ -181,7 +181,7 @@ def get_api_url() -> str:
         API URL string (defaults to https://api.aigon.ai)
     """
     env_url = os.getenv("AIGON_API_URL")
-    config_url = get_config_value('api', 'url')
+    config_url = get_config_value("api", "url")
 
     # Similar conflict check
     if env_url and config_url and env_url != config_url:
@@ -194,46 +194,45 @@ def get_api_url() -> str:
 
 # ===== CLI Commands =====
 
+
 def register_config_commands(subparsers) -> None:
     """Register config commands with argument parser."""
-    config_parser = subparsers.add_parser('config', help='Manage configuration')
-    config_subparsers = config_parser.add_subparsers(dest='config_command', help='Config commands')
+    config_parser = subparsers.add_parser("config", help="Manage configuration")
+    config_subparsers = config_parser.add_subparsers(dest="config_command", help="Config commands")
 
     # aigon config show
-    show_parser = config_subparsers.add_parser('show', help='Show current configuration')
-    show_parser.add_argument('--secrets', action='store_true',
-                            help='Show secret values (tokens, keys)')
+    show_parser = config_subparsers.add_parser("show", help="Show current configuration")
+    show_parser.add_argument("--secrets", action="store_true", help="Show secret values (tokens, keys)")
 
     # aigon config set <key> <value>
-    set_parser = config_subparsers.add_parser('set', help='Set a configuration value')
-    set_parser.add_argument('key', help='Config key (e.g., api.token, api.url, encryption.key)')
-    set_parser.add_argument('value', help='Value to set')
+    set_parser = config_subparsers.add_parser("set", help="Set a configuration value")
+    set_parser.add_argument("key", help="Config key (e.g., api.token, api.url, encryption.key)")
+    set_parser.add_argument("value", help="Value to set")
 
     # aigon config unset <key>
-    unset_parser = config_subparsers.add_parser('unset', help='Remove a configuration value')
-    unset_parser.add_argument('key', help='Config key to remove (e.g., api.token)')
+    unset_parser = config_subparsers.add_parser("unset", help="Remove a configuration value")
+    unset_parser.add_argument("key", help="Config key to remove (e.g., api.token)")
 
     # aigon config get <key>
-    get_parser = config_subparsers.add_parser('get', help='Get a configuration value')
-    get_parser.add_argument('key', help='Config key (e.g., api.token)')
-    get_parser.add_argument('--secrets', action='store_true',
-                           help='Show secret values (tokens, keys)')
+    get_parser = config_subparsers.add_parser("get", help="Get a configuration value")
+    get_parser.add_argument("key", help="Config key (e.g., api.token)")
+    get_parser.add_argument("--secrets", action="store_true", help="Show secret values (tokens, keys)")
 
     # aigon config help
-    config_subparsers.add_parser('help', help='Show config help')
+    config_subparsers.add_parser("help", help="Show config help")
 
 
 def handle_config_command(args) -> None:
     """Handle config commands."""
-    if args.config_command == 'show':
+    if args.config_command == "show":
         cmd_show(show_secrets=args.secrets)
-    elif args.config_command == 'set':
+    elif args.config_command == "set":
         cmd_set(args.key, args.value)
-    elif args.config_command == 'unset':
+    elif args.config_command == "unset":
         cmd_unset(args.key)
-    elif args.config_command == 'get':
-        cmd_get(args.key, show_secrets=getattr(args, 'secrets', False))
-    elif args.config_command == 'help':
+    elif args.config_command == "get":
+        cmd_get(args.key, show_secrets=getattr(args, "secrets", False))
+    elif args.config_command == "help":
         cmd_help()
     else:
         cmd_help()
@@ -248,20 +247,20 @@ def _parse_key(key: str) -> tuple:
     Returns:
         Tuple of (section, option)
     """
-    if '.' not in key:
+    if "." not in key:
         print(f"Error: Invalid key format '{key}'", file=sys.stderr)
         print("Expected format: section.key (e.g., api.token, encryption.key)", file=sys.stderr)
         sys.exit(1)
 
-    parts = key.split('.', 1)
+    parts = key.split(".", 1)
     return parts[0], parts[1]
 
 
 def _is_secret_key(section: str, option: str) -> bool:
     """Check if a config key is a secret."""
     secret_keys = [
-        ('api', 'token'),
-        ('encryption', 'key'),
+        ("api", "token"),
+        ("encryption", "key"),
     ]
     return (section, option) in secret_keys
 
@@ -269,8 +268,8 @@ def _is_secret_key(section: str, option: str) -> bool:
 def _mask_value(value: str) -> str:
     """Mask a secret value for display."""
     if len(value) <= 8:
-        return '*' * len(value)
-    return value[:4] + '*' * (len(value) - 8) + value[-4:]
+        return "*" * len(value)
+    return value[:4] + "*" * (len(value) - 8) + value[-4:]
 
 
 def cmd_show(show_secrets: bool = False) -> None:
@@ -302,9 +301,9 @@ def cmd_show(show_secrets: bool = False) -> None:
 
     # Show environment overrides
     env_vars = [
-        ('AIGON_API_TOKEN', 'api.token'),
-        ('AIGON_API_URL', 'api.url'),
-        ('AIGON_CLI_CONFIG_FILE', None),  # Special: not a config key, just env var
+        ("AIGON_API_TOKEN", "api.token"),
+        ("AIGON_API_URL", "api.url"),
+        ("AIGON_CLI_CONFIG_FILE", None),  # Special: not a config key, just env var
     ]
 
     print("Environment variables:")
@@ -331,8 +330,8 @@ def cmd_set(key: str, value: str) -> None:
     section, option = _parse_key(key)
 
     # Check for environment conflict on secrets
-    if section == 'api' and option == 'token':
-        env_token = os.getenv('AIGON_API_TOKEN')
+    if section == "api" and option == "token":
+        env_token = os.getenv("AIGON_API_TOKEN")
         if env_token and env_token != value:
             print("Warning: AIGON_API_TOKEN environment variable is also set", file=sys.stderr)
             print("         The environment variable will take precedence", file=sys.stderr)

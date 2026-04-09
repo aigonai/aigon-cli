@@ -5,15 +5,14 @@ This module provides LLM-friendly help and command documentation.
 (c) Stefan LOESCH 2025-26. All rights reserved.
 """
 
-import argparse
 import sys
 
 
 def register_llm_commands(subparsers):
     """Register LLM help commands with argument parser.
 
-    Registers ``llmhelp`` as the primary subcommand and ``llm`` as a hidden
-    back-compat alias (old name). Both route to :func:`handle_llm_command`.
+    Registers ``llmhelp`` as the primary subcommand for LLM-friendly
+    command reference and help.
 
     Args:
         subparsers: Argument parser subparsers object
@@ -25,13 +24,6 @@ def register_llm_commands(subparsers):
         default=[],
         help="Topic: notes/notetaker, files/filedb, event, or a command path",
     )
-
-    # Hidden back-compat alias for the old `aigon llm ...` name.
-    # NOTE: we register a separate subparser rather than using
-    # ``aliases=["llm"]`` because argparse shows aliases in the help listing;
-    # we want this name hidden.
-    llm_alias_parser = subparsers.add_parser("llm", help=argparse.SUPPRESS)
-    llm_alias_parser.add_argument("topic", nargs="*", default=[])
 
 
 def handle_llm_command(args):

@@ -71,7 +71,7 @@ Use --newest N: for recent recordings/notes
 
 ### Search notes
   aigon notetaker search "query"            # Full-text search
-  aigon notetaker search "query" --last 7   # Last 7 days
+  aigon notetaker search "query" --days 7   # Last 7 days
 
 ### Mark as processed
   aigon notetaker mark --processed abc123 def456

@@ -602,8 +602,8 @@ def recent_notes(
     output_format: Optional[str] = None,
     download_directory: Optional[str] = None,
     clear_directory: bool = False,
-    max_bytes: int = 5000,
-    max_bytes_llm: int = 5000,
+    max_bytes: int = -1,
+    max_bytes_llm: int = -1,
     processed_status: str = "unprocessed",
     note_type: str = "user",
     time_window_start: Optional[float] = 3.0,
@@ -627,9 +627,9 @@ def recent_notes(
                       Default: llm for stdout, json for download
         download_directory: Directory to download files to (None = stdout mode, str = download)
         clear_directory: Whether to clear directory before downloading (only with download_directory)
-        max_bytes: Maximum total response size in bytes (default: 5000, -1 = no limit)
+        max_bytes: Maximum total response size in bytes (default: -1 = unlimited)
                    Only applies to JSON format
-        max_bytes_llm: Maximum total size for all notes in LLM format (default: 5000, -1 = no limit)
+        max_bytes_llm: Maximum total size for all notes in LLM format (default: -1 = unlimited)
                       Only applies to LLM format
         processed_status: Filter by processed status (default: unprocessed)
         note_type: Filter by note type (user, system, all) - default: user
@@ -1411,14 +1411,14 @@ def register_notetaker_commands(subparsers):
     read_parser.add_argument(
         "--max-bytes",
         type=int,
-        default=5000,
-        help='Maximum total response size in bytes (default: 5000, -1 = no limit). If exceeded, content is replaced with "(truncated)"',
+        default=-1,
+        help='Maximum total response size in bytes (default: -1 = unlimited). If exceeded, content is replaced with "(truncated)"',
     )
     read_parser.add_argument(
         "--max-bytes-llm",
         type=int,
-        default=5000,
-        help="Maximum total size for all notes in LLM format (default: 5000, -1 = no limit). Only applies to --format llm",
+        default=-1,
+        help="Maximum total size for all notes in LLM format (default: -1 = unlimited). Only applies to --format llm",
     )
     read_parser.add_argument(
         "--processed-status",
@@ -1841,8 +1841,8 @@ def handle_notetaker_command(args, client: AigonClient):
             # Get notes by ID - warn if filter flags provided (format/download/clear still work)
             has_filter_flags = (
                 args.limit is not None
-                or getattr(args, "max_bytes", 5000) != 5000
-                or getattr(args, "max_bytes_llm", 5000) != 5000
+                or getattr(args, "max_bytes", -1) != -1
+                or getattr(args, "max_bytes_llm", -1) != -1
                 or args.processed_status != "unprocessed"
                 or args.all
             )

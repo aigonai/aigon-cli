@@ -6,6 +6,7 @@ including search and recent notes retrieval.
 (c) Stefan LOESCH 2025-26. All rights reserved.
 """
 
+import argparse
 import json
 import os
 import shutil
@@ -1198,14 +1199,23 @@ def register_notetaker_commands(subparsers):
         help="Output format: llm (default), json, snippet, summary, full (raw API response with match scores)",
     )
     search_parser.add_argument(
+        "--save",
+        nargs="?",
+        const="_notes",
+        default=None,
+        dest="save",
+        help="Save notes (with attachments, excluding voice) to files. Optionally specify directory (default: _notes)",
+    )
+    search_parser.add_argument(
         "--download",
         nargs="?",
         const="_notes",
         default=None,
-        help="Download notes (with attachments, excluding voice) to files. Optionally specify directory (default: _notes)",
+        dest="save",
+        help=argparse.SUPPRESS,
     )
     search_parser.add_argument(
-        "--clear", action="store_true", help="Clear directory before downloading notes (requires --download)"
+        "--clear", action="store_true", help="Clear directory before saving notes (requires --save)"
     )
 
     # Time filtering options (relative - days back)
@@ -1399,14 +1409,23 @@ def register_notetaker_commands(subparsers):
         help="Output format: llm (default), json, snippet (one-liner), summary (summary+len only)",
     )
     read_parser.add_argument(
+        "--save",
+        nargs="?",
+        const="_notes",
+        default=None,
+        dest="save",
+        help="Save notes (with attachments, excluding voice) to files. Optionally specify directory (default: _notes)",
+    )
+    read_parser.add_argument(
         "--download",
         nargs="?",
         const="_notes",
         default=None,
-        help="Download notes (with attachments, excluding voice) to files. Optionally specify directory (default: _notes)",
+        dest="save",
+        help=argparse.SUPPRESS,
     )
     read_parser.add_argument(
-        "--clear", action="store_true", help="Clear directory before downloading notes (requires --download)"
+        "--clear", action="store_true", help="Clear directory before saving notes (requires --save)"
     )
     read_parser.add_argument(
         "--max-bytes",
@@ -1617,11 +1636,20 @@ def register_notetaker_commands(subparsers):
         help="Attachment filename (optional - uses first/only attachment if not specified)",
     )
     attachment_parser.add_argument(
+        "--save",
+        nargs="?",
+        const=".",
+        default=None,
+        dest="save",
+        help="Save attachment to directory (default: current directory)",
+    )
+    attachment_parser.add_argument(
         "--download",
         nargs="?",
         const=".",
         default=None,
-        help="Download attachment to directory (default: current directory)",
+        dest="save",
+        help=argparse.SUPPRESS,
     )
 
     # Save report command
@@ -1686,7 +1714,7 @@ def handle_notetaker_command(args, client: AigonClient):
     """
     if args.notetaker_command == "search":
         # Validate flag combinations
-        if args.clear and args.download is None:
+        if args.clear and args.save is None:
             print("Error: --clear requires --download flag", file=sys.stderr)
             sys.exit(1)
 
@@ -1807,7 +1835,7 @@ def handle_notetaker_command(args, client: AigonClient):
             content_type=args.content_type,
             limit=limit,
             output_format=args.format,
-            download_directory=args.download,
+            download_directory=args.save,
             clear_directory=args.clear,
             scope=scope,
             time_window_start=time_window_start,
@@ -1856,7 +1884,7 @@ def handle_notetaker_command(args, client: AigonClient):
                 client,
                 unique_ids=unique_ids,
                 output_format=args.format,
-                download_directory=args.download,
+                download_directory=args.save,
                 clear_directory=args.clear,
                 context_before=context_before,
                 context_after=context_after,
@@ -1865,7 +1893,7 @@ def handle_notetaker_command(args, client: AigonClient):
             )
         else:
             # Validate flag combinations
-            if args.clear and args.download is None:
+            if args.clear and args.save is None:
                 print("Error: --clear requires --download flag", file=sys.stderr)
                 sys.exit(1)
 
@@ -1933,7 +1961,7 @@ def handle_notetaker_command(args, client: AigonClient):
                 client,
                 limit=limit,
                 output_format=args.format,
-                download_directory=args.download,
+                download_directory=args.save,
                 clear_directory=args.clear,
                 max_bytes=getattr(args, "max_bytes", 5000),
                 max_bytes_llm=getattr(args, "max_bytes_llm", 5000),
@@ -2023,7 +2051,7 @@ def handle_notetaker_command(args, client: AigonClient):
             )
     elif args.notetaker_command == "attachment":
         # Handle attachment command
-        get_attachment(client, note_id=args.note_id, filename=args.filename, download_directory=args.download)
+        get_attachment(client, note_id=args.note_id, filename=args.filename, download_directory=args.save)
     elif args.notetaker_command == "savereport":
         # Handle savereport command - read from file or stdin
         filename = getattr(args, "filename", None)

@@ -141,7 +141,7 @@ Read notes. Default: oldest 10 unprocessed (for processing backlogs in order).
   --week                Last 7 days
   --forever             All time (no time filter)
   --context N           For ID lookups: show N notes before/after
-  --download [DIR]      Save to files (default dir: _notes/)
+  --save [DIR]          Save to files (default dir: _notes/)
 
 ## Notes
 
@@ -217,16 +217,16 @@ Get an attachment from a note.
 ## Usage
 
   aigon notetaker attachment abc123                   # Output first attachment
-  aigon notetaker attachment abc123 --download        # Save to file
+  aigon notetaker attachment abc123 --save            # Save to file
   aigon notetaker attachment abc123 photo.jpg         # Specific attachment by filename
 
 ## Flags
 
-  --download [DIR]      Save to directory instead of stdout (default: current dir)
+  --save [DIR]          Save to directory instead of stdout (default: current dir)
 
 ## Notes
 
-Without --download, content goes to stdout (text/binary).
+Without --save, content goes to stdout (text/binary).
 If a note has multiple attachments, specify filename as second argument.
 If omitted, returns the first (or only) attachment.
 
@@ -570,7 +570,7 @@ Use --newest N: for recent recordings/notes
 
 ### Get attachments
   aigon notetaker attachment abc123         # Output first attachment
-  aigon notetaker attachment abc123 --download
+  aigon notetaker attachment abc123 --save
 
 ### Agent shortcuts
   aigon coach                               # Same as: notetaker read --agent coach
